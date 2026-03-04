@@ -46,4 +46,4 @@ This website is built with the **Astro** framework using the [Mizuki](https://gi
 
 ---
 
-*Built with ❤️ using Astro and inspired by modern web design principles.*
+感谢大家的支持喵~

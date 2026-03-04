@@ -2,13 +2,47 @@
 import type { CollectionEntry } from "astro:content";
 import { getCollection, render } from "astro:content";
 import MainGridLayout from "@layouts/MainGridLayout.astro";
-import Markdown from "@components/misc/Markdown.astro";
+
+type ThoughtDisplayData = CollectionEntry<"thoughts">["data"] & {
+	author?: string;
+	status?: string;
+	tags?: string[];
+	chapterNumber?: number;
+};
+
+function normalizeEntryId(id: string) {
+	return id.replace(/^\/+|\/+$/g, "");
+}
+
+function getIdParts(id: string) {
+	return normalizeEntryId(id).split("/").filter(Boolean);
+}
+
+function isThoughtCoverEntry(entry: CollectionEntry<"thoughts">) {
+	const parts = getIdParts(entry.id);
+	return parts.length === 1 || (parts.length === 2 && parts[0] === parts[1]);
+}
+
+function isThoughtChapterEntry(entry: CollectionEntry<"thoughts">) {
+	const parts = getIdParts(entry.id);
+	return parts.length >= 2 && !isThoughtCoverEntry(entry);
+}
 
 export async function getStaticPaths() {
-	const all = await getCollection("thoughts");
-	const paths = all
-		.filter((entry) => entry.id.endsWith("index.md"))
-		.map((entry) => ({ params: { thoughtSlug: entry.id.split("/")[0] }, props: { entry } }));
+	const allThoughtEntries = await getCollection("thoughts");
+
+	const paths = allThoughtEntries
+		.filter((entry) => {
+			const parts = entry.id.replace(/^\/+|\/+$/g, "").split("/").filter(Boolean);
+			return parts.length === 1 || (parts.length === 2 && parts[0] === parts[1]);
+		})
+		.map((entry) => ({
+			params: {
+				thoughtSlug: entry.id.replace(/^\/+|\/+$/g, "").split("/").filter(Boolean)[0],
+			},
+			props: { entry },
+		}));
+
 	return paths;
 }
 
@@ -18,16 +52,99 @@ interface Props {
 
 const { entry } = Astro.props as Props;
 const { Content } = await render(entry);
+const thoughtDir = getIdParts(entry.id)[0];
+
+const allThoughtEntries = await getCollection("thoughts");
+
+const chapterFiles = allThoughtEntries.filter((entryItem) => {
+	const parts = getIdParts(entryItem.id);
+	return parts[0] === thoughtDir && isThoughtChapterEntry(entryItem);
+});
+
+chapterFiles.sort((a, b) => {
+	const numA = (a.data as ThoughtDisplayData).chapterNumber || 999;
+	const numB = (b.data as ThoughtDisplayData).chapterNumber || 999;
+	return numA - numB;
+});
+
+const entryData = entry.data as ThoughtDisplayData;
+const thoughtTitle = entryData.title;
 
 ---
 
-<MainGridLayout title={entry.data.title}>
+<MainGridLayout title={thoughtTitle}>
 	<div class="prose dark:prose-invert max-w-none">
-		<h1>{entry.data.title}</h1>
-		<div class="my-6 p-4 bg-gray-50 dark:bg-gray-900 rounded-lg">
-			<Markdown class="markdown-content">
-				<Content />
-			</Markdown>
+		<div class="mb-8">
+			<h1>{thoughtTitle}</h1>
+
+			<div class="flex flex-wrap gap-4 my-4 text-sm">
+				{
+					entryData.author && (
+						<p>
+							<strong>作者:</strong> {entryData.author}
+						</p>
+					)
+				}
+				{
+					entryData.status && (
+						<p>
+							<strong>状态:</strong>
+							<span class="font-semibold text-blue-600 dark:text-blue-400">
+								{entryData.status}
+							</span>
+						</p>
+					)
+				}
+			</div>
+
+			{
+				entryData.tags && entryData.tags.length > 0 && (
+					<div class="flex flex-wrap gap-2 mb-4">
+						{entryData.tags.map((tag) => (
+							<span class="px-3 py-1 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 text-sm">
+								{tag}
+							</span>
+						))}
+					</div>
+				)
+			}
+		</div>
+
+		<div class="my-8 p-4 bg-gray-50 dark:bg-gray-900 rounded-lg custom-md">
+			<Content />
+		</div>
+
+		<hr class="my-8" />
+
+		<h2>章节列表</h2>
+
+		<div class="space-y-2">
+			{
+				chapterFiles.length > 0 ? (
+					chapterFiles.map((chapter) => {
+						const chapterParts = getIdParts(chapter.id);
+						const chapterFileName = chapterParts[chapterParts.length - 1]
+							.replace(/\.md$/, "")
+							.replace(/^\d+-/, "");
+
+						return (
+							<a
+								href={`/thoughts/${thoughtDir}/${chapterFileName}/`}
+								class="block p-3 rounded border border-gray-200 dark:border-gray-700 hover:bg-blue-50 dark:hover:bg-blue-900/30 hover:border-blue-500 dark:hover:border-blue-400 transition-colors"
+							>
+								<h3 class="font-semibold">{chapter.data.title}</h3>
+								{chapter.data.published && (
+									<p class="text-xs text-gray-500 dark:text-gray-400">
+										{new Date(chapter.data.published).toLocaleDateString("zh-CN")}
+									</p>
+								)}
+							</a>
+						);
+					})
+				) : (
+					<p class="text-gray-500 dark:text-gray-400">暂无章节</p>
+				)
+			}
 		</div>
 	</div>
 </MainGridLayout>

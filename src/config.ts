@@ -23,7 +23,7 @@ const SITE_LANG = "zh_CN"; // 语言代码，例如：'en', 'zh_CN', 'ja' 等。
 const SITE_TIMEZONE = 8; //设置你的网站时区 from -12 to 12 default in UTC+8
 export const siteConfig: SiteConfig = {
 	title: "MOI",
-	subtitle: "One demo website",
+	subtitle: "记录创作与灵感的小站",
 	siteURL: "https://mizuki.mysqil.com/", // 请替换为你的站点URL，以斜杠结尾
 	siteStartDate: "2026-02-07", // 站点开始运行日期，用于站点统计组件计算运行天数
 
@@ -53,7 +53,7 @@ export const siteConfig: SiteConfig = {
 		// 显示模式："text-icon" 显示图标+文本，"logo" 仅显示Logo
 		mode: "logo",
 		// 顶栏标题文本
-		text: "MizukiUI",
+		text: "水月小站",
 		// 顶栏标题图标路径，默认使用 public/assets/home/home.png
 		icon: "assets/home/home.png",
 		// 网站Logo图片路径
@@ -95,22 +95,23 @@ export const siteConfig: SiteConfig = {
 
 	banner: {
 		// 支持单张图片或图片数组，当数组长度 > 1 时自动启用轮播
+		// 你后续可以直接替换 /public/images/ai-home 目录下的同名图片
 		src: {
 			desktop: [
-				"/assets/desktop-banner/1.webp",
-				"/assets/desktop-banner/2.webp",
-				"/assets/desktop-banner/3.webp",
-				"/assets/desktop-banner/4.webp",
-				"/assets/desktop-banner/5.webp",
-				"/assets/desktop-banner/6.webp",
+				"/images/ai-home/desktop/1.webp",
+				"/images/ai-home/desktop/2.webp",
+				"/images/ai-home/desktop/3.webp",
+				"/images/ai-home/desktop/4.webp",
+				"/images/ai-home/desktop/5.webp",
+				"/images/ai-home/desktop/6.webp",
 			], // 桌面横幅图片
 			mobile: [
-				"/assets/mobile-banner/1.webp",
-				"/assets/mobile-banner/2.webp",
-				"/assets/mobile-banner/3.webp",
-				"/assets/mobile-banner/4.webp",
-				"/assets/mobile-banner/5.webp",
-				"/assets/mobile-banner/6.webp",
+				"/images/ai-home/mobile/1.webp",
+				"/images/ai-home/mobile/2.webp",
+				"/images/ai-home/mobile/3.webp",
+				"/images/ai-home/mobile/4.webp",
+				"/images/ai-home/mobile/5.webp",
+				"/images/ai-home/mobile/6.webp",
 			], // 移动横幅图片
 		}, // 使用本地横幅图片
 
@@ -138,14 +139,14 @@ export const siteConfig: SiteConfig = {
 
 		homeText: {
 			enable: true, // 在主页显示自定义文本
-			title: "わたしの部屋", // 主页横幅主标题
+			title: "我的创作角落", // 主页横幅主标题
 
 			subtitle: [
-				"特別なことはないけど、君がいると十分です",
-				"今でもあなたは私の光",
-				"君ってさ、知らないうちに私の毎日になってたよ",
-				"君と話すと、なんか毎日がちょっと楽しくなるんだ",
-				"今日はなんでもない日。でも、ちょっとだけいい日",
+				"欢迎来到我的小说与随笔空间",
+				"把灵感写成故事，把情绪变成文字",
+				"每一张图都可以是新章节的开场",
+				"愿你在这里，找到片刻安静与共鸣",
+				"今天也继续认真创作，慢慢发光",
 			],
 			typewriter: {
 				enable: true, // 启用副标题打字机效果
@@ -159,7 +160,7 @@ export const siteConfig: SiteConfig = {
 		credit: {
 			enable: false, // 显示横幅图片来源文本
 
-			text: "Describe", // 要显示的来源文本
+			text: "图片来源", // 要显示的来源文本
 			url: "", // （可选）原始艺术品或艺术家页面的 URL 链接
 		},
 
@@ -209,20 +210,20 @@ export const siteConfig: SiteConfig = {
 export const fullscreenWallpaperConfig: FullscreenWallpaperConfig = {
 	src: {
 		desktop: [
-			"/assets/desktop-banner/1.webp",
-			"/assets/desktop-banner/2.webp",
-			"/assets/desktop-banner/3.webp",
-			"/assets/desktop-banner/4.webp",
-			"/assets/desktop-banner/5.webp",
-			"/assets/desktop-banner/6.webp",
+			"/images/ai-home/desktop/1.webp",
+			"/images/ai-home/desktop/2.webp",
+			"/images/ai-home/desktop/3.webp",
+			"/images/ai-home/desktop/4.webp",
+			"/images/ai-home/desktop/5.webp",
+			"/images/ai-home/desktop/6.webp",
 		], // 桌面横幅图片
 		mobile: [
-			"/assets/mobile-banner/1.webp",
-			"/assets/mobile-banner/2.webp",
-			"/assets/mobile-banner/3.webp",
-			"/assets/mobile-banner/4.webp",
-			"/assets/mobile-banner/5.webp",
-			"/assets/mobile-banner/6.webp",
+			"/images/ai-home/mobile/1.webp",
+			"/images/ai-home/mobile/2.webp",
+			"/images/ai-home/mobile/3.webp",
+			"/images/ai-home/mobile/4.webp",
+			"/images/ai-home/mobile/5.webp",
+			"/images/ai-home/mobile/6.webp",
 		], // 移动横幅图片
 	}, // 使用本地横幅图片
 	position: "center", // 壁纸位置，等同于 object-position
@@ -241,11 +242,7 @@ export const navBarConfig: NavBarConfig = {
 		LinkPreset.Archive, // 小说列表
 		LinkPreset.Essays,
 		LinkPreset.Thoughts,
-		{
-			name: "About",
-			url: "/about/",
-			icon: "material-symbols:info",
-		},
+		LinkPreset.About,
 	],
 };
 
@@ -313,11 +310,11 @@ export const shareConfig: ShareConfig = {
 
 export const announcementConfig: AnnouncementConfig = {
 	title: "", // 公告标题，填空使用i18n字符串Key.announcement
-	content: "ブログへようこそ！これはサンプルの告知です", // 公告内容
+	content: "欢迎来到我的小站，最近会持续更新小说与随笔内容。", // 公告内容
 	closable: true, // 允许用户关闭公告
 	link: {
 		enable: true, // 启用链接
-		text: "Learn More", // 链接文本
+		text: "了解更多", // 链接文本
 		url: "/about/", // 链接 URL
 		external: false, // 内部链接
 	},
@@ -489,16 +486,16 @@ export const pioConfig: import("./types/config").PioConfig = {
 	mode: "draggable", // 默认为可拖拽模式
 	hiddenOnMobile: true, // 默认在移动设备上隐藏
 	dialog: {
-		welcome: "Welcome to Novel Library!", // 欢迎词
+		welcome: "欢迎来到我的小说角落！", // 欢迎词
 		touch: [
-			"Want to read a novel?",
-			"Focus on reading!",
-			"Don't distract me!",
-			"Let me read in peace!",
+			"要不要先看一章新故事？",
+			"今天也来认真读一点吧。",
+			"写作中，灵感请排队进入。",
+			"保持安静，故事正在发芽。",
 		], // 触摸提示
-		home: "Click here to go back to homepage!", // 首页提示
-		skin: ["Happy reading!", "Enjoy the story~"], // 换装提示
-		close: "See you next time~", // 关闭提示
+		home: "点我可以回到首页。", // 首页提示
+		skin: ["阅读愉快！", "愿你喜欢这个故事。"], // 换装提示
+		close: "下次再见～", // 关闭提示
 		link: "#", // 关于链接
 	},
 };

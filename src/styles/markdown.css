@@ -196,3 +196,14 @@
 :root:not(.dark) .custom-md spoiler {
   --_spoiler-mask: color-mix(in oklch, var(--primary) 55%, white 45%);
 }
+/* 自定义小说段落间距 */
+.markdown-body p {
+  margin-top: 1.2rem; /* 段落上方的间距 */
+  margin-bottom: 1.2rem; /* 段落下方的间距 */
+  line-height: 1.8; /* 让行与行之间也更松散一点，阅读更舒服 */
+}
+
+/* 如果你希望对话之间的间距稍微小一点，可以只针对普通段落 */
+.markdown-body p {
+  letter-spacing: 0.02em; /* 稍微增加一点字间距，更有质感 */
+}

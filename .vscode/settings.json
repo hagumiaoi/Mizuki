@@ -13,6 +13,7 @@
 	"[typescriptreact]": {
 		"editor.defaultFormatter": "esbenp.prettier-vscode"
 	},
+	"css.lint.unknownAtRules": "ignore",
 	"liveServer.settings.root": "/dist",
 	"frontMatter.dashboard.openOnStart": false
 }

@@ -1,0 +1,151 @@
+---
+import type { CollectionEntry } from "astro:content";
+import { getCollection, render } from "astro:content";
+import MainGridLayout from "../../../layouts/MainGridLayout.astro";
+
+function normalizeEntryId(id: string) {
+	return id.replace(/^\/+|\/+$/g, "");
+}
+
+function getIdParts(id: string) {
+	return normalizeEntryId(id).split("/").filter(Boolean);
+}
+
+function isThoughtCoverEntry(entry: CollectionEntry<"thoughts">) {
+	const parts = getIdParts(entry.id);
+	return parts.length === 1 || (parts.length === 2 && parts[0] === parts[1]);
+}
+
+function isThoughtChapterEntry(entry: CollectionEntry<"thoughts">) {
+	const parts = getIdParts(entry.id);
+	return parts.length >= 2 && !isThoughtCoverEntry(entry);
+}
+
+export async function getStaticPaths() {
+	const allThoughtEntries = await getCollection("thoughts");
+
+	const paths = allThoughtEntries
+		.filter((entry) => {
+			const parts = entry.id.replace(/^\/+|\/+$/g, "").split("/").filter(Boolean);
+			const isCover = parts.length === 1 || (parts.length === 2 && parts[0] === parts[1]);
+			return parts.length >= 2 && !isCover;
+		})
+		.map((entry) => {
+			const parts = entry.id.replace(/^\/+|\/+$/g, "").split("/").filter(Boolean);
+			const thoughtSlug = parts[0];
+			const chapterFile = parts[parts.length - 1]
+				.replace(/\.md$/, "")
+				.replace(/^\d+-/, "");
+
+			return {
+				params: {
+					thoughtSlug,
+					chapterSlug: chapterFile,
+				},
+				props: { entry, thoughtSlug },
+			};
+		});
+
+	return paths;
+}
+
+interface Props {
+	entry: CollectionEntry<"thoughts">;
+	thoughtSlug: string;
+}
+
+const { entry, thoughtSlug } = Astro.props as Props;
+const { Content } = await render(entry);
+
+const allThoughtEntries = await getCollection("thoughts");
+
+const allChapters = allThoughtEntries
+	.filter((e) => {
+		const parts = getIdParts(e.id);
+		return parts[0] === thoughtSlug && isThoughtChapterEntry(e);
+	})
+	.sort((a, b) => {
+		const numA = a.data.chapterNumber || 999;
+		const numB = b.data.chapterNumber || 999;
+		return numA - numB;
+	});
+
+const currentIndex = allChapters.findIndex((e) => e.id === entry.id);
+
+const prevChapter =
+	currentIndex > 0 ? allChapters[currentIndex - 1] : null;
+const nextChapter =
+	currentIndex < allChapters.length - 1
+		? allChapters[currentIndex + 1]
+		: null;
+
+const thoughtInfo = allThoughtEntries.find((e) => {
+	const parts = getIdParts(e.id);
+	return parts[0] === thoughtSlug && isThoughtCoverEntry(e);
+});
+
+function getChapterUrl(chapterEntry: CollectionEntry<"thoughts">) {
+	const parts = getIdParts(chapterEntry.id);
+	const fileName = parts[parts.length - 1]
+		.replace(/\.md$/, "")
+		.replace(/^\d+-/, "");
+	return `/thoughts/${thoughtSlug}/${fileName}/`;
+}
+---
+
+<MainGridLayout title={entry.data.title}>
+	<div class="prose dark:prose-invert max-w-none">
+		<div class="mb-8 pb-8 border-b border-gray-200 dark:border-gray-700">
+			<div class="mb-4">
+				<a href={`/thoughts/${thoughtSlug}/`} class="text-blue-600 dark:text-blue-400 hover:underline">
+					← 返回 {thoughtInfo?.data.title}
+				</a>
+			</div>
+
+			<h1>{entry.data.title}</h1>
+
+			{entry.data.published && (
+				<p class="text-sm text-gray-500 dark:text-gray-400">
+					发布于 {new Date(entry.data.published).toLocaleDateString("zh-CN")}
+				</p>
+			)}
+		</div>
+
+		<div class="my-8 custom-md">
+			<Content />
+		</div>
+
+		<div class="mt-8 pt-8 border-t border-gray-200 dark:border-gray-700">
+			<div class="flex justify-between items-center">
+				{prevChapter ? (
+					<a
+						href={getChapterUrl(prevChapter)}
+						class="text-blue-600 dark:text-blue-400 hover:underline"
+					>
+						← 上一章: {prevChapter.data.title}
+					</a>
+				) : (
+					<div></div>
+				)}
+
+				<a
+					href={`/thoughts/${thoughtSlug}/`}
+					class="text-blue-600 dark:text-blue-400 hover:underline"
+				>
+					章节列表
+				</a>
+
+				{nextChapter ? (
+					<a
+						href={getChapterUrl(nextChapter)}
+						class="text-blue-600 dark:text-blue-400 hover:underline"
+					>
+						下一章: {nextChapter.data.title} →
+					</a>
+				) : (
+					<div></div>
+				)}
+			</div>
+		</div>
+	</div>
+</MainGridLayout>

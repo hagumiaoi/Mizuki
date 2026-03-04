@@ -27,13 +27,14 @@ import { Icon } from "astro-icon/components";
     font-weight: bold
     border: none
     position: fixed
-    bottom: 10rem
+    bottom: 2rem
     opacity: 1
-    right: 6rem
+    right: 1.5rem
+    z-index: 60
     cursor: pointer
-    transform: translateX(5rem)
+    transform: translateX(0)
     pointer-events: auto
-    transition: box-shadow 1s ease-in-out
+    transition: transform .25s ease, opacity .25s ease, box-shadow .25s ease
 
     i
       font-size: 1.75rem
@@ -50,10 +51,12 @@ import { Icon } from "astro-icon/components";
     .back-to-top-btn
       box-shadow: none
 
-  // 手机端隐藏返回顶部按钮
+  // 手机端保持可见并避开底部操作区
   @media (max-width: 768px)
-    .back-to-top-wrapper
-      display: none
+    .back-to-top-btn
+      right: 1rem
+      bottom: 5.5rem
+      font-size: 2rem
 
 </style>
 

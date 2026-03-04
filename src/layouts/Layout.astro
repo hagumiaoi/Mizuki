@@ -852,6 +852,35 @@ function disableAnimation() {
 	let fancyboxSelectors: string[] = [];
 	let Fancybox: any;
 
+	function ensureFancyboxEscListener() {
+		if ((window as any).__fancyboxEscListenerBound) return;
+
+		document.addEventListener("keydown", (event) => {
+			const isEscape =
+				event.key === "Escape" ||
+				event.key === "Esc" ||
+				event.code === "Escape";
+			if (!isEscape) return;
+			if (!Fancybox) return;
+
+			const instance = Fancybox.getInstance?.();
+			if (instance) {
+				event.preventDefault();
+				event.stopPropagation();
+				instance.close();
+				return;
+			}
+
+			if (typeof Fancybox.close === "function") {
+				event.preventDefault();
+				event.stopPropagation();
+				Fancybox.close(false);
+			}
+		}, true);
+
+		(window as any).__fancyboxEscListenerBound = true;
+	}
+
 	// 数学公式按需加载
 	function checkKatex() {
 		if (document.querySelector(".katex")) {
@@ -862,7 +891,7 @@ function disableAnimation() {
 	// 图片灯箱按需加载
 	async function initFancybox() {
 		const albumImagesSelector =
-			".custom-md img, #post-cover img, .moment-images img";
+			".custom-md img, #post-cover img, .moment-images img, .prose img";
 		const albumLinksSelector = ".moment-images a[data-fancybox]";
 		const singleFancyboxSelector = "[data-fancybox]:not(.moment-images a)";
 
@@ -878,6 +907,8 @@ function disableAnimation() {
 			Fancybox = mod.Fancybox;
 			await import("@fancyapps/ui/dist/fancybox/fancybox.css");
 		}
+
+		ensureFancyboxEscListener();
 
 		if (fancyboxSelectors.length > 0) {
 			return; // 已经初始化，直接返回
@@ -900,8 +931,12 @@ function disableAnimation() {
 					right: ["slideshow", "thumbs", "close"],
 				},
 			},
+			idle: false,
+			closeButton: true,
 			animated: true,
-			dragToClose: true,
+			dragToClose: false,
+			contentClick: "toggleZoom",
+			dblClick: "toggleZoom",
 			keyboard: {
 				Escape: "close",
 				Delete: "close",
@@ -916,7 +951,18 @@ function disableAnimation() {
 			fitToView: true,
 			preload: 3,
 			infinite: true,
-			Panzoom: { maxScale: 3, minScale: 1 },
+			Panzoom: {
+				maxScale: 4,
+				minScale: 1,
+				lockAxis: false,
+			},
+			Images: {
+				Panzoom: {
+					maxScale: 4,
+					minScale: 1,
+					lockAxis: false,
+				},
+			},
 			caption: false,
 		};
 
@@ -1254,18 +1300,16 @@ function disableAnimation() {
 		
 		// 尝试获取内容区域的起始位置
 		const contentWrapper = document.getElementById('content-wrapper');
-		let showBackToTopThreshold = bannerHeight + 100; // 默认回退值
+		const quickThreshold = 240;
+		let showBackToTopThreshold = quickThreshold;
 
 		if (contentWrapper) {
 			const rect = contentWrapper.getBoundingClientRect();
-			// 当 content-wrapper 的顶部接近视口顶部时显示
-			// rect.top 是相对于视口的，当它小于视口高度的一半时，说明已经滚动到了内容区
-			// 或者更简单：scrollTop > contentWrapper.offsetTop
-			// 由于 offsetTop 是相对于 offsetParent 的，可能需要累加
-			// 这里我们使用 getBoundingClientRect + scrollTop 来获取绝对位置
 			const absoluteTop = rect.top + scrollTop;
-			// 只有当滚动超过内容区域起始位置一定距离后才显示
-			showBackToTopThreshold = absoluteTop + window.innerHeight / 4;
+			showBackToTopThreshold = Math.max(
+				quickThreshold,
+				absoluteTop - window.innerHeight / 2,
+			);
 		}
 
 		// 批量处理DOM操作

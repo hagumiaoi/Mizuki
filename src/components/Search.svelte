@@ -7,34 +7,30 @@ import { url } from "@utils/url-utils";
 import { onMount, onDestroy } from "svelte";
 import type { SearchResult } from "@/global";
 
+type SearchIndexItem = {
+	title: string;
+	excerpt: string;
+	url: string;
+	searchText: string;
+	publishedAt: number;
+	collection: "posts" | "novels" | "essays" | "thoughts";
+};
+
 let keywordDesktop = $state("");
 let keywordMobile = $state("");
 let result: SearchResult[] = $state([]);
-let pagefindLoaded = false;
-let initialized = $state(false);
+let searchIndex: SearchIndexItem[] = $state([]);
+let searchIndexLoaded = $state(false);
+let searchIndexLoading = $state(false);
 let isDesktopSearchExpanded = $state(false);
-let debounceTimer: NodeJS.Timeout;
+let debounceTimer: ReturnType<typeof setTimeout>;
 let windowJustFocused = false;
-let focusTimer: NodeJS.Timeout;
-let blurTimer: NodeJS.Timeout;
+let focusTimer: ReturnType<typeof setTimeout>;
+let blurTimer: ReturnType<typeof setTimeout>;
 
-const fakeResult: SearchResult[] = [
-	{
-		url: url("/"),
-		meta: {
-			title: "This Is a Fake Search Result",
-		},
-		excerpt:
-			"Because the search cannot work in the <mark>dev</mark> environment.",
-	},
-	{
-		url: url("/"),
-		meta: {
-			title: "If You Want to Test the Search",
-		},
-		excerpt: "Try running <mark>npm build && npm preview</mark> instead.",
-	},
-];
+const MAX_RESULTS = 20;
+
+const getCurrentKeyword = () => (keywordDesktop || keywordMobile).trim();
 
 const togglePanel = () => {
 	const panel = document.getElementById("search-panel");
@@ -89,6 +85,7 @@ const closeSearchPanel = (): void => {
 	keywordDesktop = "";
 	keywordMobile = "";
 	result = [];
+	isDesktopSearchExpanded = false;
 };
 
 const handleResultClick = (event: Event, url: string): void => {
@@ -97,122 +94,216 @@ const handleResultClick = (event: Event, url: string): void => {
 	navigateToPage(url);
 };
 
+const escapeHtml = (value: string): string =>
+	value
+		.replace(/&/g, "&amp;")
+		.replace(/</g, "&lt;")
+		.replace(/>/g, "&gt;")
+		.replace(/\"/g, "&quot;")
+		.replace(/'/g, "&#39;");
+
+const escapeRegExp = (value: string): string =>
+	value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+const getSearchTerms = (keyword: string): string[] => {
+	const normalized = keyword.trim().toLowerCase();
+	if (!normalized) {
+		return [];
+	}
+	return Array.from(new Set(normalized.split(/\s+/).filter(Boolean))).slice(0, 6);
+};
+
+const highlightText = (text: string, keyword: string): string => {
+	const safeText = escapeHtml(text || "");
+	const terms = getSearchTerms(keyword);
+
+	if (!terms.length) {
+		return safeText;
+	}
+
+	let highlighted = safeText;
+	for (const term of terms) {
+		const escapedTerm = escapeHtml(term);
+		if (!escapedTerm) continue;
+		highlighted = highlighted.replace(
+			new RegExp(escapeRegExp(escapedTerm), "gi"),
+			"<mark>$&</mark>",
+		);
+	}
+
+	return highlighted;
+};
+
+const scoreItem = (item: SearchIndexItem, terms: string[]): number => {
+	const title = item.title.toLowerCase();
+	const excerpt = item.excerpt.toLowerCase();
+	const searchText = item.searchText.toLowerCase();
+
+	let score = 0;
+	for (const term of terms) {
+		let matched = false;
+
+		if (title.includes(term)) {
+			score += 8;
+			matched = true;
+		}
+		if (excerpt.includes(term)) {
+			score += 4;
+			matched = true;
+		}
+		if (searchText.includes(term)) {
+			score += 2;
+			matched = true;
+		}
+
+		if (!matched) {
+			score -= 1;
+		}
+	}
+
+	return Math.max(score, 0);
+};
+
+const toSearchResult = (item: SearchIndexItem, keyword: string): SearchResult => ({
+	url: item.url,
+	meta: {
+		title: item.title,
+	},
+	excerpt: highlightText(item.excerpt || item.title, keyword),
+});
+
 const search = async (keyword: string, isDesktop: boolean): Promise<void> => {
-	if (!keyword) {
+	const normalizedKeyword = keyword.trim();
+
+	if (!normalizedKeyword) {
 		setPanelVisibility(false, isDesktop);
 		result = [];
 		return;
 	}
-	if (!initialized) {
+
+	if (!searchIndexLoaded) {
+		setPanelVisibility(true, isDesktop);
+		result = [];
 		return;
 	}
+
+	const terms = getSearchTerms(normalizedKeyword);
+	if (!terms.length) {
+		result = [];
+		setPanelVisibility(false, isDesktop);
+		return;
+	}
+
 	try {
-		let searchResults: SearchResult[] = [];
-		if (import.meta.env.PROD && pagefindLoaded && window.pagefind) {
-			const response = await window.pagefind.search(keyword);
-			searchResults = await Promise.all(
-				response.results.map((item) => item.data()),
-			);
-		} else if (import.meta.env.DEV) {
-			searchResults = fakeResult;
-		} else {
-			searchResults = [];
-			console.error("Pagefind is not available in production environment.");
-		}
-		result = searchResults;
-		setPanelVisibility(result.length > 0, isDesktop);
+		const rankedResults = searchIndex
+			.map((item) => ({
+				item,
+				score: scoreItem(item, terms),
+			}))
+			.filter((item) => item.score > 0)
+			.sort((a, b) => {
+				if (b.score !== a.score) {
+					return b.score - a.score;
+				}
+				return (b.item.publishedAt || 0) - (a.item.publishedAt || 0);
+			})
+			.slice(0, MAX_RESULTS)
+			.map(({ item }) => toSearchResult(item, normalizedKeyword));
+
+		result = rankedResults;
+		setPanelVisibility(true, isDesktop);
 	} catch (error) {
 		console.error("Search error:", error);
 		result = [];
-		setPanelVisibility(false, isDesktop);
+		setPanelVisibility(true, isDesktop);
 	}
 };
 
-onMount(() => {
-	const initializeSearch = () => {
-		initialized = true;
-		pagefindLoaded =
-			typeof window !== "undefined" &&
-			!!window.pagefind &&
-			typeof window.pagefind.search === "function";
-		console.log("Pagefind status on init:", pagefindLoaded);
-	};
-	if (import.meta.env.DEV) {
-		console.log(
-			"Pagefind is not available in development mode. Using mock data.",
-		);
-		initializeSearch();
-	} else {
-		document.addEventListener("pagefindready", () => {
-			console.log("Pagefind ready event received.");
-			initializeSearch();
-		});
-		document.addEventListener("pagefindloaderror", () => {
-			console.warn(
-				"Pagefind load error event received. Search functionality will be limited.",
-			);
-			initializeSearch(); // Initialize with pagefindLoaded as false
-		});
-		// Fallback in case events are not caught or pagefind is already loaded by the time this script runs
-		setTimeout(() => {
-			if (!initialized) {
-				console.log("Fallback: Initializing search after timeout.");
-				initializeSearch();
-			}
-		}, 2000); // Adjust timeout as needed
+const loadSearchIndex = async (): Promise<void> => {
+	if (searchIndexLoading || searchIndexLoaded) {
+		return;
 	}
 
-	// 监听窗口焦点事件，防止切换窗口时自动展开搜索框
-	const handleFocus = () => {
-		windowJustFocused = true;
-		clearTimeout(focusTimer);
-		focusTimer = setTimeout(() => {
-			windowJustFocused = false;
-		}, 500); // 500ms 后才允许 mouseenter 触发展开
-	};
+	searchIndexLoading = true;
 
-	window.addEventListener('focus', handleFocus);
-
-	return () => {
-		window.removeEventListener('focus', handleFocus);
-	};
-});
-
-$effect(() => {
-	if (initialized) {
-		const keyword = keywordDesktop || keywordMobile;
-		const isDesktop = !!keywordDesktop || isDesktopSearchExpanded;
-
-		clearTimeout(debounceTimer);
-		if (keyword) {
-			debounceTimer = setTimeout(() => {
-				search(keyword, isDesktop);
-			}, 300);
-		} else {
-			result = [];
-			setPanelVisibility(false, isDesktop);
+	try {
+		const response = await fetch(url("/api/search-index.json"));
+		if (!response.ok) {
+			throw new Error(`Failed to load search index: ${response.status}`);
 		}
+
+		const payload = await response.json();
+		if (Array.isArray(payload)) {
+			searchIndex = payload.filter(
+				(item): item is SearchIndexItem =>
+					typeof item === "object" &&
+					item !== null &&
+					typeof item.title === "string" &&
+					typeof item.excerpt === "string" &&
+					typeof item.url === "string" &&
+					typeof item.searchText === "string" &&
+					typeof item.publishedAt === "number",
+			);
+		} else {
+			searchIndex = [];
+		}
+	} catch (error) {
+		console.error("Failed to load search index:", error);
+		searchIndex = [];
+	} finally {
+		searchIndexLoading = false;
+		searchIndexLoaded = true;
+	}
+};
+
+const handleWindowFocus = () => {
+	windowJustFocused = true;
+	clearTimeout(focusTimer);
+	focusTimer = setTimeout(() => {
+		windowJustFocused = false;
+	}, 500);
+};
+
+onMount(() => {
+	void loadSearchIndex();
+	window.addEventListener("focus", handleWindowFocus);
+});
+
+$effect(() => {
+	const keyword = getCurrentKeyword();
+	const isDesktop = !!keywordDesktop || isDesktopSearchExpanded;
+
+	clearTimeout(debounceTimer);
+	if (keyword) {
+		debounceTimer = setTimeout(() => {
+			void search(keyword, isDesktop);
+		}, 250);
+	} else {
+		result = [];
+		setPanelVisibility(false, isDesktop);
 	}
 });
 
 $effect(() => {
-	if (typeof document !== 'undefined') {
-		const navbar = document.getElementById('navbar');
+	if (typeof document !== "undefined") {
+		const navbar = document.getElementById("navbar");
 		if (isDesktopSearchExpanded) {
-			navbar?.classList.add('is-searching');
+			navbar?.classList.add("is-searching");
 		} else {
-			navbar?.classList.remove('is-searching');
+			navbar?.classList.remove("is-searching");
 		}
 	}
 });
 
 onDestroy(() => {
-	if (typeof document !== 'undefined') {
-		const navbar = document.getElementById('navbar');
-		navbar?.classList.remove('is-searching');
+	if (typeof document !== "undefined") {
+		const navbar = document.getElementById("navbar");
+		navbar?.classList.remove("is-searching");
 	}
+	window.removeEventListener("focus", handleWindowFocus);
 	clearTimeout(debounceTimer);
 	clearTimeout(focusTimer);
+	clearTimeout(blurTimer);
 });
 </script>
 
@@ -280,6 +371,14 @@ onDestroy(() => {
             </div>
         </a>
     {/each}
+
+	{#if getCurrentKeyword() && searchIndexLoading}
+		<div class="px-3 py-2 text-sm text-black/50 dark:text-white/50">正在加载搜索索引…</div>
+	{/if}
+
+	{#if getCurrentKeyword() && searchIndexLoaded && !searchIndexLoading && result.length === 0}
+		<div class="px-3 py-2 text-sm text-black/50 dark:text-white/50">未找到相关文章</div>
+	{/if}
 </div>
 
 <style>

@@ -3,12 +3,29 @@ import type { CollectionEntry } from "astro:content";
 import { getCollection } from "astro:content";
 import MainGridLayout from "@layouts/MainGridLayout.astro";
 
-// 获取所有随笔（只获取 index.md 文件作为条目）
-const allEntries = await getCollection("essays");
-const essays = allEntries.filter((entry) => {
-	const filePathParts = entry.id.split("/");
-	return filePathParts[filePathParts.length - 1] === "index.md";
-});
+type EssayDisplayData = CollectionEntry<"essays">["data"] & {
+	cover?: string;
+	status?: string;
+	tags?: string[];
+	author?: string;
+};
+
+function normalizeEntryId(id: string) {
+	return id.replace(/^\/+|\/+$/g, "");
+}
+
+function getIdParts(id: string) {
+	return normalizeEntryId(id).split("/").filter(Boolean);
+}
+
+function isEssayCoverEntry(entry: CollectionEntry<"essays">) {
+	const parts = getIdParts(entry.id);
+	return parts.length === 1 || (parts.length === 2 && parts[0] === parts[1]);
+}
+
+// 获取所有随笔封面条目。
+const allEssayEntries = await getCollection("essays");
+const essays = allEssayEntries.filter((entry) => isEssayCoverEntry(entry));
 
 essays.sort((a, b) => {
 	const dateA = new Date(a.data.published || 0).getTime();
@@ -21,20 +38,63 @@ essays.sort((a, b) => {
 <MainGridLayout title="随笔">
 	<div class="prose dark:prose-invert max-w-none">
 		<h1>随笔</h1>
-		<p>这里是随笔列表。</p>
+		<p>欢迎来到随笔栏目。</p>
 
-		<div class="space-y-4 mt-6">
-			{essays.map((e) => {
-				const slug = e.id.split("/")[0];
+		<div class="flex flex-col gap-4 mt-8">
+			{essays.map((essay) => {
+				const essayData = essay.data as EssayDisplayData;
+				const essayDir = getIdParts(essay.id)[0];
+				const essayTitle = essayData.title;
+				const essayLink = `/essays/${essayDir}/`;
+
 				return (
-					<a href={`/essays/${slug}/`} class="block p-4 rounded border hover:border-blue-500">
-						<h2 class="text-lg font-semibold">{e.data.title}</h2>
-						{e.data.description && <p class="text-sm text-gray-600">{e.data.description}</p>}
+					<a
+						href={essayLink}
+						class="block p-4 md:p-5 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-blue-500 dark:hover:border-blue-400 transition-colors"
+					>
+						<div class="flex flex-col md:flex-row gap-4 md:gap-5">
+							{essayData.cover && (
+								<img
+									src={essayData.cover}
+									alt={essayTitle}
+									class="w-full md:w-52 h-40 md:h-36 object-cover rounded-md shrink-0"
+								/>
+							)}
+							<div class="min-w-0 flex-1">
+								<h2 class="text-xl font-bold mb-2">{essayTitle}</h2>
+								{essayData.author && (
+									<p class="text-sm text-gray-600 dark:text-gray-400 mb-2">
+										作者: {essayData.author}
+									</p>
+								)}
+								{essayData.status && (
+									<p class="text-sm font-semibold text-blue-600 dark:text-blue-400 mb-2">
+										{essayData.status}
+									</p>
+								)}
+								<p class="text-gray-700 dark:text-gray-300 line-clamp-2">
+									{essayData.description}
+								</p>
+								{essayData.tags && essayData.tags.length > 0 && (
+									<div class="mt-3 flex flex-wrap gap-2">
+										{essayData.tags.map((tag) => (
+											<span class="text-xs px-2 py-1 rounded bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300">
+												{tag}
+											</span>
+										))}
+									</div>
+								)}
+							</div>
+						</div>
 					</a>
 				);
 			})}
 		</div>
 
-		{essays.length === 0 && <p class="text-gray-500">暂无随笔</p>}
+		{essays.length === 0 && (
+			<div class="text-center py-12">
+				<p class="text-gray-600 dark:text-gray-400">暂无随笔</p>
+			</div>
+		)}
 	</div>
 </MainGridLayout>

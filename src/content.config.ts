@@ -68,6 +68,9 @@ const essaysCollection = defineCollection({
 		description: z.string().optional().default(""),
 		tags: z.array(z.string()).optional().default([]),
 		author: z.string().optional().default(""),
+		status: z.string().optional().default("已发布"),
+		cover: z.string().optional().default(""),
+		chapterNumber: z.number().optional(),
 	}),
 });
 
@@ -78,6 +81,11 @@ const thoughtsCollection = defineCollection({
 		published: z.date().optional(),
 		draft: z.boolean().optional().default(false),
 		description: z.string().optional().default(""),
+		tags: z.array(z.string()).optional().default([]),
+		author: z.string().optional().default(""),
+		status: z.string().optional().default("已发布"),
+		cover: z.string().optional().default(""),
+		chapterNumber: z.number().optional(),
 	}),
 });
 

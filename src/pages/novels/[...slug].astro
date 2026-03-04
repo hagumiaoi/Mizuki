@@ -1,0 +1,357 @@
+---
+import type { CollectionEntry } from "astro:content";
+import { getCollection, render } from "astro:content";
+import MainGridLayout from "../../layouts/MainGridLayout.astro";
+import {
+	buildNovelCategories,
+	getChapterPath,
+	getChapterSlugFromEntryId,
+	getWorkPath,
+	isLegacySingleWorkCategory,
+	type NovelWork,
+} from "../../utils/novel-structure";
+
+export async function getStaticPaths() {
+	const allNovelEntries = await getCollection("novels");
+	const categories = buildNovelCategories(allNovelEntries);
+	const routeSet = new Set<string>();
+	const toRouteSlug = (segments: string[]) => segments.join("/");
+
+	for (const category of categories) {
+		if (isLegacySingleWorkCategory(category)) {
+			const legacyWork = category.works[0];
+			routeSet.add(toRouteSlug([category.categorySlug]));
+			for (const chapter of legacyWork.chapterEntries) {
+				routeSet.add(
+					toRouteSlug([
+						category.categorySlug,
+						getChapterSlugFromEntryId(chapter.id),
+					]),
+				);
+			}
+			continue;
+		}
+
+		routeSet.add(toRouteSlug([category.categorySlug]));
+		for (const work of category.works) {
+			routeSet.add(toRouteSlug([category.categorySlug, work.workSlug]));
+			for (const chapter of work.chapterEntries) {
+				routeSet.add(
+					toRouteSlug([
+						category.categorySlug,
+						work.workSlug,
+						getChapterSlugFromEntryId(chapter.id),
+					]),
+				);
+			}
+		}
+	}
+
+	return Array.from(routeSet).map((slug) => ({
+		params: { slug },
+	}));
+}
+
+const slugParts = (Astro.params.slug || "").split("/").filter(Boolean);
+const allNovelEntries = await getCollection("novels");
+const categories = buildNovelCategories(allNovelEntries);
+const category = categories.find((item) => item.categorySlug === slugParts[0]);
+
+if (!category) {
+	throw new Error(`小说分类不存在: ${slugParts[0] || ""}`);
+}
+
+type PageType = "category" | "work" | "chapter";
+
+let pageType: PageType = "category";
+let currentWork: NovelWork | null = null;
+let currentChapter: CollectionEntry<"novels"> | null = null;
+
+if (slugParts.length === 1) {
+	if (isLegacySingleWorkCategory(category)) {
+		pageType = "work";
+		currentWork = category.works[0];
+	}
+} else if (slugParts.length === 2) {
+	if (isLegacySingleWorkCategory(category)) {
+		const legacyWork = category.works[0];
+		const matchedChapter = legacyWork.chapterEntries.find((chapter) => {
+			return getChapterSlugFromEntryId(chapter.id) === slugParts[1];
+		});
+
+		if (!matchedChapter) {
+			throw new Error(`小说章节不存在: ${slugParts.join("/")}`);
+		}
+
+		pageType = "chapter";
+		currentWork = legacyWork;
+		currentChapter = matchedChapter;
+	} else {
+		const matchedWork = category.works.find((work) => {
+			return work.workSlug === slugParts[1];
+		});
+
+		if (!matchedWork) {
+			throw new Error(`小说作品不存在: ${slugParts.join("/")}`);
+		}
+
+		pageType = "work";
+		currentWork = matchedWork;
+	}
+} else if (slugParts.length === 3) {
+	const matchedWork = category.works.find((work) => {
+		return work.workSlug === slugParts[1];
+	});
+
+	if (!matchedWork) {
+		throw new Error(`小说作品不存在: ${slugParts.join("/")}`);
+	}
+
+	const matchedChapter = matchedWork.chapterEntries.find((chapter) => {
+		return getChapterSlugFromEntryId(chapter.id) === slugParts[2];
+	});
+
+	if (!matchedChapter) {
+		throw new Error(`小说章节不存在: ${slugParts.join("/")}`);
+	}
+
+	pageType = "chapter";
+	currentWork = matchedWork;
+	currentChapter = matchedChapter;
+} else {
+	throw new Error(`无效小说路径: ${slugParts.join("/")}`);
+}
+
+let WorkContent: null | Awaited<ReturnType<typeof render>>["Content"] = null;
+if (pageType === "work" && currentWork) {
+	const rendered = await render(currentWork.coverEntry);
+	WorkContent = rendered.Content;
+}
+
+let ChapterContent: null | Awaited<ReturnType<typeof render>>["Content"] = null;
+if (pageType === "chapter" && currentChapter) {
+	const rendered = await render(currentChapter);
+	ChapterContent = rendered.Content;
+}
+
+const chapterList = currentWork?.chapterEntries || [];
+const currentChapterIndex = currentChapter
+	? chapterList.findIndex((chapter) => chapter.id === currentChapter.id)
+	: -1;
+const prevChapter = currentChapterIndex > 0 ? chapterList[currentChapterIndex - 1] : null;
+const nextChapter =
+	currentChapterIndex >= 0 && currentChapterIndex < chapterList.length - 1
+		? chapterList[currentChapterIndex + 1]
+		: null;
+
+const pageTitle =
+	pageType === "category"
+		? category.categoryTitle
+		: pageType === "work" && currentWork
+			? currentWork.coverEntry.data.title
+			: currentChapter?.data.title || "小说";
+---
+
+{pageType === "category" && (
+	<MainGridLayout title={pageTitle}>
+		<div class="prose dark:prose-invert max-w-none">
+			<h1>{category.categoryTitle}</h1>
+			<p>请选择想阅读的作品。</p>
+
+			<div class="flex flex-col gap-4 mt-8">
+				{category.works.map((work) => (
+					<a
+						href={getWorkPath(work)}
+						class="block p-4 md:p-5 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-blue-500 dark:hover:border-blue-400 transition-colors"
+					>
+						<div class="flex flex-col md:flex-row gap-4 md:gap-5">
+							{work.coverEntry.data.cover && (
+								<img
+									src={work.coverEntry.data.cover}
+									alt={work.coverEntry.data.title}
+									class="w-full md:w-52 h-40 md:h-36 object-cover rounded-md shrink-0"
+								/>
+							)}
+							<div class="min-w-0 flex-1">
+								<h2 class="text-xl font-bold mb-2">{work.coverEntry.data.title}</h2>
+								{work.coverEntry.data.author && (
+									<p class="text-sm text-gray-600 dark:text-gray-400 mb-2">
+										作者: {work.coverEntry.data.author}
+									</p>
+								)}
+								{work.coverEntry.data.status && (
+									<p class="text-sm font-semibold text-blue-600 dark:text-blue-400 mb-2">
+										{work.coverEntry.data.status}
+									</p>
+								)}
+								<p class="text-gray-700 dark:text-gray-300 line-clamp-2">
+									{work.coverEntry.data.description}
+								</p>
+								{work.coverEntry.data.tags && work.coverEntry.data.tags.length > 0 && (
+									<div class="mt-3 flex flex-wrap gap-2">
+										{work.coverEntry.data.tags.map((tag) => (
+											<span class="text-xs px-2 py-1 rounded bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300">
+												{tag}
+											</span>
+										))}
+									</div>
+								)}
+							</div>
+						</div>
+					</a>
+				))}
+			</div>
+
+			{category.works.length === 0 && (
+				<div class="text-center py-12">
+					<p class="text-gray-600 dark:text-gray-400">暂无作品</p>
+				</div>
+			)}
+		</div>
+	</MainGridLayout>
+)}
+
+{pageType === "work" && currentWork && (
+	<MainGridLayout title={pageTitle}>
+		<div class="prose dark:prose-invert max-w-none">
+			<div class="mb-8">
+				{!currentWork.isLegacy && (
+					<div class="mb-4">
+						<a
+							href={`/novels/${category.categorySlug}/`}
+							class="text-blue-600 dark:text-blue-400 hover:underline"
+						>
+							← 返回 {category.categoryTitle}
+						</a>
+					</div>
+				)}
+
+				<h1>{currentWork.coverEntry.data.title}</h1>
+
+				<div class="flex flex-wrap gap-4 my-4 text-sm">
+					{currentWork.coverEntry.data.author && (
+						<p>
+							<strong>作者:</strong> {currentWork.coverEntry.data.author}
+						</p>
+					)}
+					{currentWork.coverEntry.data.status && (
+						<p>
+							<strong>状态:</strong>
+							<span class="font-semibold text-blue-600 dark:text-blue-400">
+								{currentWork.coverEntry.data.status}
+							</span>
+						</p>
+					)}
+				</div>
+
+				{currentWork.coverEntry.data.tags && currentWork.coverEntry.data.tags.length > 0 && (
+					<div class="flex flex-wrap gap-2 mb-4">
+						{currentWork.coverEntry.data.tags.map((tag) => (
+							<span class="px-3 py-1 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 text-sm">
+								{tag}
+							</span>
+						))}
+					</div>
+				)}
+			</div>
+
+			<div class="my-8 p-4 bg-gray-50 dark:bg-gray-900 rounded-lg custom-md">
+				{WorkContent && <WorkContent />}
+			</div>
+
+			<hr class="my-8" />
+
+			<h2>章节列表</h2>
+			<div class="space-y-2">
+				{currentWork.chapterEntries.length > 0 ? (
+					currentWork.chapterEntries.map((chapter) => (
+						<a
+							href={getChapterPath(currentWork, chapter)}
+							class="block p-3 rounded border border-gray-200 dark:border-gray-700 hover:bg-blue-50 dark:hover:bg-blue-900/30 hover:border-blue-500 dark:hover:border-blue-400 transition-colors"
+						>
+							<h3 class="font-semibold">{chapter.data.title}</h3>
+							{chapter.data.published && (
+								<p class="text-xs text-gray-500 dark:text-gray-400">
+									{new Date(chapter.data.published).toLocaleDateString("zh-CN")}
+								</p>
+							)}
+						</a>
+					))
+				) : (
+					<p class="text-gray-500 dark:text-gray-400">暂无章节</p>
+				)}
+			</div>
+		</div>
+	</MainGridLayout>
+)}
+
+{pageType === "chapter" && currentWork && currentChapter && (
+	<MainGridLayout title={pageTitle}>
+		<div class="prose dark:prose-invert max-w-none">
+			<div class="mb-8 pb-8 border-b border-gray-200 dark:border-gray-700">
+				<div class="mb-4">
+					<a href={getWorkPath(currentWork)} class="text-blue-600 dark:text-blue-400 hover:underline">
+						← 返回 {currentWork.coverEntry.data.title}
+					</a>
+				</div>
+
+				<h1>{currentChapter.data.title}</h1>
+
+				{currentChapter.data.published && (
+					<p class="text-sm text-gray-500 dark:text-gray-400">
+						发布于 {new Date(currentChapter.data.published).toLocaleDateString("zh-CN")}
+					</p>
+				)}
+			</div>
+
+			<div class="my-8 custom-md">
+				{ChapterContent && <ChapterContent />}
+			</div>
+
+			<div class="mt-8 pt-8 border-t border-gray-200 dark:border-gray-700">
+				<div class="flex justify-between items-center">
+					{prevChapter ? (
+						<a
+							href={getChapterPath(currentWork, prevChapter)}
+							class="text-blue-600 dark:text-blue-400 hover:underline"
+						>
+							← 上一章: {prevChapter.data.title}
+						</a>
+					) : (
+						<div></div>
+					)}
+
+					<a
+						href={getWorkPath(currentWork)}
+						class="text-blue-600 dark:text-blue-400 hover:underline"
+					>
+						章节列表
+					</a>
+
+					{nextChapter ? (
+						<a
+							href={getChapterPath(currentWork, nextChapter)}
+							class="text-blue-600 dark:text-blue-400 hover:underline"
+						>
+							下一章: {nextChapter.data.title} →
+						</a>
+					) : (
+						<div></div>
+					)}
+				</div>
+			</div>
+		</div>
+	</MainGridLayout>
+)}
+
+{pageType === "chapter" && (
+	<style is:global>
+		main p, article p {
+			margin-top: 2rem !important;
+			margin-bottom: 2rem !important;
+			line-height: 1.8 !important;
+			font-size: 1.1rem;
+			letter-spacing: 0.03em;
+		}
+	</style>
+)}

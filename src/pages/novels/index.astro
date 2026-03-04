@@ -1,91 +1,61 @@
 ---
-import type { CollectionEntry } from "astro:content";
 import { getCollection } from "astro:content";
 import MainGridLayout from "@layouts/MainGridLayout.astro";
-import I18nKey from "@i18n/i18nKey";
-import { i18n } from "@i18n/translation";
+import { buildNovelCategories } from "@utils/novel-structure";
 
-function normalizeEntryId(id: string) {
-	return id.replace(/^\/+|\/+$/g, "");
-}
-
-function getIdParts(id: string) {
-	return normalizeEntryId(id).split("/").filter(Boolean);
-}
-
-function isNovelCoverEntry(entry: CollectionEntry<"novels">) {
-	const parts = getIdParts(entry.id);
-	return parts.length === 1 || (parts.length === 2 && parts[0] === parts[1]);
-}
-
-// 获取所有小说封面条目。
 const allNovelEntries = await getCollection("novels");
-const novels = allNovelEntries.filter((entry) => isNovelCoverEntry(entry));
-
-novels.sort((a, b) => {
-	const dateA = new Date(a.data.published || 0).getTime();
-	const dateB = new Date(b.data.published || 0).getTime();
-	return dateB - dateA;
-});
-
-interface Props {}
-const props: Props = {};
+const categories = buildNovelCategories(allNovelEntries);
 ---
 
-<MainGridLayout title="小说库">
+<MainGridLayout title="小说">
 	<div class="prose dark:prose-invert max-w-none">
-		<h1>小说库</h1>
-		<p>欢迎来到小说库。我们精心收集了各种类型的小说作品。</p>
+		<h1>小说</h1>
+		<p>欢迎来到小说栏目，请先选择分类。</p>
 
-		<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
+		<div class="flex flex-col gap-4 mt-8">
 			{
-				novels.map((novel) => {
-					const novelDir = getIdParts(novel.id)[0];
-					const novelTitle = novel.data.title;
-					const novelLink = `/novels/${novelDir}/`;
+				categories.map((category) => {
+					const categoryLink = `/novels/${category.categorySlug}/`;
+					const categoryCover = category.works.find((work) => {
+						return Boolean(work.coverEntry.data.cover);
+					})?.coverEntry.data.cover;
+					const workTitles = category.works
+						.slice(0, 3)
+						.map((work) => work.coverEntry.data.title)
+						.filter(Boolean);
 
 					return (
 						<a
-							href={novelLink}
-							class="block p-6 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-blue-500 dark:hover:border-blue-400 transition-colors"
+							href={categoryLink}
+							class="block p-4 md:p-5 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-blue-500 dark:hover:border-blue-400 transition-colors"
 						>
-							{novel.data.cover && (
-								<img
-									src={novel.data.cover}
-									alt={novelTitle}
-									class="w-full h-48 object-cover rounded-md mb-4"
-								/>
-							)}
-							<h2 class="text-xl font-bold mb-2">{novelTitle}</h2>
-							{novel.data.author && (
-								<p class="text-sm text-gray-600 dark:text-gray-400 mb-2">
-									作者: {novel.data.author}
-								</p>
-							)}
-							{novel.data.status && (
-								<p class="text-sm font-semibold text-blue-600 dark:text-blue-400 mb-2">
-									{novel.data.status}
-								</p>
-							)}
-							<p class="text-gray-700 dark:text-gray-300 line-clamp-3">
-								{novel.data.description}
-							</p>
-							{novel.data.tags && novel.data.tags.length > 0 && (
-								<div class="mt-3 flex flex-wrap gap-2">
-									{novel.data.tags.map((tag) => (
-										<span class="text-xs px-2 py-1 rounded bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300">
-											{tag}
-										</span>
-									))}
+							<div class="flex flex-col md:flex-row gap-4 md:gap-5">
+								{categoryCover && (
+									<img
+										src={categoryCover}
+										alt={category.categoryTitle}
+										class="w-full md:w-52 h-40 md:h-36 object-cover rounded-md shrink-0"
+									/>
+								)}
+								<div class="min-w-0 flex-1">
+									<h2 class="text-xl font-bold mb-2">{category.categoryTitle}</h2>
+									<p class="text-sm text-gray-600 dark:text-gray-400 mb-2">
+										作品数: {category.works.length}
+									</p>
+									{workTitles.length > 0 && (
+										<p class="text-gray-700 dark:text-gray-300 line-clamp-2">
+											包含：{workTitles.join("、")}
+										</p>
+									)}
 								</div>
-							)}
+							</div>
 						</a>
 					);
 				})
 			}
 		</div>
 
-		{novels.length === 0 && (
+		{categories.length === 0 && (
 			<div class="text-center py-12">
 				<p class="text-gray-600 dark:text-gray-400">暂无小说</p>
 			</div>

@@ -12,6 +12,25 @@ const umamiEnabled = umamiConfig.enabled || false;
 const umamiWebsiteId = umamiConfig.scripts.match(/data-website-id="([^"]+)"/)?.[1] || "";
 const umamiApiKey = umamiConfig.apiKey || "";
 const umamiBaseUrl = umamiConfig.baseUrl || "";
+
+const pathname = Astro.url.pathname || "/";
+
+let displayName = profileConfig.name;
+let displayBio = profileConfig.bio || "";
+
+if (pathname === "/") {
+    displayName = "主页";
+    displayBio = "欢迎来到我的主页";
+} else if (pathname.startsWith("/novels")) {
+    displayName = "小说";
+    displayBio = "我的小说收藏";
+} else if (pathname.startsWith("/essays")) {
+    displayName = "随笔";
+    displayBio = "我的随笔记录";
+} else if (pathname.startsWith("/thoughts")) {
+    displayName = "简思";
+    displayBio = "我的简思片段";
+}
 ---
 
 <div class="card-base p-3">
@@ -27,18 +46,18 @@ const umamiBaseUrl = umamiConfig.baseUrl || "";
         <ImageWrapper src={profileConfig.avatar || ""} alt="Profile Image of the Author" class="mx-auto lg:w-full h-full lg:mt-0 "></ImageWrapper>
     </a>
     <div class="px-2">
-        <div class="font-bold text-xl text-center mb-1 dark:text-neutral-50 transition">{profileConfig.name}</div>
+        <div class="font-bold text-xl text-center mb-1 dark:text-neutral-50 transition">{displayName}</div>
         <div class="h-1 w-5 bg-[var(--primary)] mx-auto rounded-full mb-2 transition"></div>
         
         <div class="text-center text-neutral-400 mb-2.5 transition">
             {profileConfig.typewriter?.enable ? (
                 <TypewriterText 
-                    text={profileConfig.bio || ""}
+                    text={displayBio}
                     speed={profileConfig.typewriter.speed}
                     class="inline-block"
                 />
             ) : (
-                profileConfig.bio
+                displayBio
             )}
         </div>
         

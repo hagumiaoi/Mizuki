@@ -3,8 +3,28 @@ import type { CollectionEntry } from "astro:content";
 import { getCollection } from "astro:content";
 import MainGridLayout from "@layouts/MainGridLayout.astro";
 
-const all = await getCollection("thoughts");
-const thoughts = all.filter((entry) => entry.id.split("/")[entry.id.split("/").length - 1] === "index.md");
+type ThoughtDisplayData = CollectionEntry<"thoughts">["data"] & {
+	cover?: string;
+	status?: string;
+	tags?: string[];
+	author?: string;
+};
+
+function normalizeEntryId(id: string) {
+	return id.replace(/^\/+|\/+$/g, "");
+}
+
+function getIdParts(id: string) {
+	return normalizeEntryId(id).split("/").filter(Boolean);
+}
+
+function isThoughtCoverEntry(entry: CollectionEntry<"thoughts">) {
+	const parts = getIdParts(entry.id);
+	return parts.length === 1 || (parts.length === 2 && parts[0] === parts[1]);
+}
+
+const allThoughtEntries = await getCollection("thoughts");
+const thoughts = allThoughtEntries.filter((entry) => isThoughtCoverEntry(entry));
 
 thoughts.sort((a, b) => {
 	const dateA = new Date(a.data.published || 0).getTime();
@@ -16,20 +36,63 @@ thoughts.sort((a, b) => {
 <MainGridLayout title="简思">
 	<div class="prose dark:prose-invert max-w-none">
 		<h1>简思</h1>
-		<p>简短的想法展示。</p>
+		<p>欢迎来到简思栏目。</p>
 
-		<div class="space-y-4 mt-6">
-			{thoughts.map((t) => {
-				const slug = t.id.split("/")[0];
+		<div class="flex flex-col gap-4 mt-8">
+			{thoughts.map((thought) => {
+				const thoughtData = thought.data as ThoughtDisplayData;
+				const thoughtDir = getIdParts(thought.id)[0];
+				const thoughtTitle = thoughtData.title;
+				const thoughtLink = `/thoughts/${thoughtDir}/`;
+
 				return (
-					<a href={`/thoughts/${slug}/`} class="block p-3 rounded border hover:border-blue-500">
-						<h2 class="font-medium">{t.data.title}</h2>
-						{t.data.description && <p class="text-sm text-gray-600">{t.data.description}</p>}
+					<a
+						href={thoughtLink}
+						class="block p-4 md:p-5 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-blue-500 dark:hover:border-blue-400 transition-colors"
+					>
+						<div class="flex flex-col md:flex-row gap-4 md:gap-5">
+							{thoughtData.cover && (
+								<img
+									src={thoughtData.cover}
+									alt={thoughtTitle}
+									class="w-full md:w-52 h-40 md:h-36 object-cover rounded-md shrink-0"
+								/>
+							)}
+							<div class="min-w-0 flex-1">
+								<h2 class="text-xl font-bold mb-2">{thoughtTitle}</h2>
+								{thoughtData.author && (
+									<p class="text-sm text-gray-600 dark:text-gray-400 mb-2">
+										作者: {thoughtData.author}
+									</p>
+								)}
+								{thoughtData.status && (
+									<p class="text-sm font-semibold text-blue-600 dark:text-blue-400 mb-2">
+										{thoughtData.status}
+									</p>
+								)}
+								<p class="text-gray-700 dark:text-gray-300 line-clamp-2">
+									{thoughtData.description}
+								</p>
+								{thoughtData.tags && thoughtData.tags.length > 0 && (
+									<div class="mt-3 flex flex-wrap gap-2">
+										{thoughtData.tags.map((tag) => (
+											<span class="text-xs px-2 py-1 rounded bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300">
+												{tag}
+											</span>
+										))}
+									</div>
+								)}
+							</div>
+						</div>
 					</a>
 				);
 			})}
 		</div>
 
-		{thoughts.length === 0 && <p class="text-gray-500">暂无简思</p>}
+		{thoughts.length === 0 && (
+			<div class="text-center py-12">
+				<p class="text-gray-600 dark:text-gray-400">暂无简思</p>
+			</div>
+		)}
 	</div>
 </MainGridLayout>
