@@ -14,9 +14,9 @@ export const LinkPresets: { [key in LinkPreset]: NavBarLink } = {
 		icon: "material-symbols:person",
 	},
 	[LinkPreset.Archive]: {
-		name: i18n(I18nKey.archive),
-		url: "/archive/",
-		icon: "material-symbols:archive",
+		name: "小说",
+		url: "/novels/",
+		icon: "material-symbols:book",
 	},
 	[LinkPreset.Friends]: {
 		name: i18n(I18nKey.friends),
@@ -32,6 +32,16 @@ export const LinkPresets: { [key in LinkPreset]: NavBarLink } = {
 		name: i18n(I18nKey.diary),
 		url: "/diary/",
 		icon: "material-symbols:book",
+	},
+	[LinkPreset.Essays]: {
+		name: "随笔",
+		url: "/essays/",
+		icon: "material-symbols:edit",
+	},
+	[LinkPreset.Thoughts]: {
+		name: "简思",
+		url: "/thoughts/",
+		icon: "material-symbols:lightbulb",
 	},
 	[LinkPreset.Albums]: {
 		name: i18n(I18nKey.albums),

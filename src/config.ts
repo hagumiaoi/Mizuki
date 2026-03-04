@@ -19,13 +19,13 @@ import { LinkPreset } from "./types/config";
 // 移除i18n导入以避免循环依赖
 
 // 定义站点语言
-const SITE_LANG = "ja"; // 语言代码，例如：'en', 'zh_CN', 'ja' 等。
+const SITE_LANG = "zh_CN"; // 语言代码，例如：'en', 'zh_CN', 'ja' 等。
 const SITE_TIMEZONE = 8; //设置你的网站时区 from -12 to 12 default in UTC+8
 export const siteConfig: SiteConfig = {
-	title: "Mizuki",
+	title: "MOI",
 	subtitle: "One demo website",
 	siteURL: "https://mizuki.mysqil.com/", // 请替换为你的站点URL，以斜杠结尾
-	siteStartDate: "2025-01-01", // 站点开始运行日期，用于站点统计组件计算运行天数
+	siteStartDate: "2026-02-07", // 站点开始运行日期，用于站点统计组件计算运行天数
 
 	timeZone: SITE_TIMEZONE,
 
@@ -38,14 +38,14 @@ export const siteConfig: SiteConfig = {
 
 	// 特色页面开关配置（关闭未使用的页面有助于提升 SEO，关闭后请记得在 navbarConfig 中移除对应链接）
 	featurePages: {
-		anime: true, // 番剧页面开关
-		diary: true, // 日记页面开关
-		friends: true, // 友链页面开关
-		projects: true, // 项目页面开关
-		skills: true, // 技能页面开关
-		timeline: true, // 时间线页面开关
-		albums: true, // 相册页面开关
-		devices: true, // 设备页面开关
+		anime: false, // 番剧页面开关
+		diary: false, // 日记页面开关
+		friends: false, // 友链页面开关
+		projects: false, // 项目页面开关
+		skills: false, // 技能页面开关
+		timeline: false, // 时间线页面开关
+		albums: false, // 相册页面开关
+		devices: false, // 设备页面开关
 	},
 
 	// 顶栏标题配置
@@ -64,23 +64,6 @@ export const siteConfig: SiteConfig = {
 	pageScaling: {
 		enable: true, // 是否开启自动缩放
 		targetWidth: 2000, // 目标宽度，低于此宽度时开始缩放
-	},
-
-	bangumi: {
-		userId: "your-bangumi-id", // 在此处设置你的Bangumi用户ID，可以设置为 "sai" 测试
-		fetchOnDev: false, // 是否在开发环境下获取 Bangumi 数据（默认 false），获取前先执行 pnpm build 构建 json 文件
-	},
-
-	bilibili: {
-		vmid: "your-bilibili-vmid", // 在此处设置你的Bilibili用户ID (vmid)，例如 "1129280784"
-		fetchOnDev: false, // 是否在开发环境下获取 Bilibili 数据（默认 false）
-		SESSDATA: "", // Bilibili SESSDATA（可选，用于获取观看进度，从浏览器cookie中获取）
-		coverMirror: "", // 封面图片镜像源（可选，如果需要使用镜像源，例如 "https://images.weserv.nl/?url="）
-		useWebp: true, // 是否使用WebP格式（默认 true）
-	},
-
-	anime: {
-		mode: "local", // 番剧页面模式："bangumi" 使用Bangumi API，"local" 使用本地配置，"bilibili" 使用Bilibili API
 	},
 
 	// 文章列表布局配置
@@ -255,140 +238,27 @@ export const fullscreenWallpaperConfig: FullscreenWallpaperConfig = {
 export const navBarConfig: NavBarConfig = {
 	links: [
 		LinkPreset.Home,
-		LinkPreset.Archive,
-		// 支持自定义导航栏链接，支持多级菜单
-		{
-			name: "Links",
-			url: "/links/",
-			icon: "material-symbols:link",
-			children: [
-				{
-					name: "GitHub",
-					url: "https://github.com/matsuzaka-yuki/Mizuki",
-					external: true,
-					icon: "fa7-brands:github",
-				},
-				{
-					name: "Bilibili",
-					url: "https://space.bilibili.com/701864046",
-					external: true,
-					icon: "fa7-brands:bilibili",
-				},
-				{
-					name: "Gitee",
-					url: "https://gitee.com/matsuzakayuki/Mizuki",
-					external: true,
-					icon: "mdi:git",
-				},
-			],
-		},
-		{
-			name: "My",
-			url: "/content/",
-			icon: "material-symbols:person",
-			children: [
-				{
-					name: "Anime",
-					url: "/anime/",
-					icon: "material-symbols:movie",
-				},
-				{
-					name: "Diary",
-					url: "/diary/",
-					icon: "material-symbols:book",
-				},
-				{
-					name: "Gallery",
-					url: "/albums/",
-					icon: "material-symbols:photo-library",
-				},
-				{
-					name: "Devices",
-					url: "devices/",
-					icon: "material-symbols:devices",
-					external: false,
-				},
-			],
-		},
+		LinkPreset.Archive, // 小说列表
+		LinkPreset.Essays,
+		LinkPreset.Thoughts,
 		{
 			name: "About",
-			url: "/content/",
+			url: "/about/",
 			icon: "material-symbols:info",
-			children: [
-				{
-					name: "About",
-					url: "/about/",
-					icon: "material-symbols:person",
-				},
-				{
-					name: "Friends",
-					url: "/friends/",
-					icon: "material-symbols:group",
-				},
-			],
-		},
-		{
-			name: "Others",
-			url: "#",
-			icon: "material-symbols:more-horiz",
-			children: [
-				{
-					name: "Projects",
-					url: "/projects/",
-					icon: "material-symbols:work",
-				},
-				{
-					name: "Skills",
-					url: "/skills/",
-					icon: "material-symbols:psychology",
-				},
-				{
-					name: "Timeline",
-					url: "/timeline/",
-					icon: "material-symbols:timeline",
-				},
-			],
 		},
 	],
 };
 
 export const profileConfig: ProfileConfig = {
 	avatar: "assets/images/avatar.webp", // 相对于 /src 目录。如果以 '/' 开头，则相对于 /public 目录
-	name: "まつざか ゆき",
-	bio: "世界は大きい、君は行かなければならない",
+	name: "小说库",
+	bio: "我的小说收藏",
 	typewriter: {
-		enable: true, // 启用个人简介打字机效果
+		enable: false, // 启用个人简介打字机效果
 		speed: 80, // 打字速度（毫秒）
 	},
-	links: [
-		{
-			name: "Bilibili",
-			icon: "fa7-brands:bilibili",
-			url: "https://space.bilibili.com/701864046",
-		},
-		{
-			name: "Gitee",
-			icon: "mdi:git",
-			url: "https://gitee.com/matsuzakayuki",
-		},
-		{
-			name: "GitHub",
-			icon: "fa7-brands:github",
-			url: "https://github.com/matsuzaka-yuki",
-		},
-		{
-			name: "Codeberg",
-			icon: "simple-icons:codeberg",
-			url: "https://codeberg.org",
-		},
-		{
-			name: "Discord",
-			icon: "fa7-brands:discord",
-			url: "https://discord.gg/MqW6TcQtVM",
-		},
-	],
+	links: [],
 };
-
 export const licenseConfig: LicenseConfig = {
 	enable: true,
 	name: "CC BY-NC-SA 4.0",
@@ -454,7 +324,7 @@ export const announcementConfig: AnnouncementConfig = {
 };
 
 export const musicPlayerConfig: MusicPlayerConfig = {
-	enable: true, // 启用音乐播放器功能
+	enable: false, // 启用音乐播放器功能
 	mode: "meting", // 音乐播放器模式，可选 "local" 或 "meting"
 	meting_api:
 		"https://www.bilibili.uno/api?server=:server&type=:type&id=:id&auth=:auth&r=:r", // Meting API 地址
@@ -619,17 +489,17 @@ export const pioConfig: import("./types/config").PioConfig = {
 	mode: "draggable", // 默认为可拖拽模式
 	hiddenOnMobile: true, // 默认在移动设备上隐藏
 	dialog: {
-		welcome: "Welcome to Mizuki Website!", // 欢迎词
+		welcome: "Welcome to Novel Library!", // 欢迎词
 		touch: [
-			"What are you doing?",
-			"Stop touching me!",
-			"HENTAI!",
-			"Don't bully me like that!",
+			"Want to read a novel?",
+			"Focus on reading!",
+			"Don't distract me!",
+			"Let me read in peace!",
 		], // 触摸提示
 		home: "Click here to go back to homepage!", // 首页提示
-		skin: ["Want to see my new outfit?", "The new outfit looks great~"], // 换装提示
-		close: "QWQ See you next time~", // 关闭提示
-		link: "https://github.com/matsuzaka-yuki/Mizuki", // 关于链接
+		skin: ["Happy reading!", "Enjoy the story~"], // 换装提示
+		close: "See you next time~", // 关闭提示
+		link: "#", // 关于链接
 	},
 };
 

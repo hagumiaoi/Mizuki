@@ -1,0 +1,145 @@
+---
+import type { CollectionEntry } from "astro:content";
+import { getCollection, render } from "astro:content";
+import MainGridLayout from "@layouts/MainGridLayout.astro";
+
+function normalizeEntryId(id: string) {
+	return id.replace(/^\/+|\/+$/g, "");
+}
+
+function getIdParts(id: string) {
+	return normalizeEntryId(id).split("/").filter(Boolean);
+}
+
+function isNovelCoverEntry(entry: CollectionEntry<"novels">) {
+	const parts = getIdParts(entry.id);
+	return parts.length === 1 || (parts.length === 2 && parts[0] === parts[1]);
+}
+
+function isNovelChapterEntry(entry: CollectionEntry<"novels">) {
+	const parts = getIdParts(entry.id);
+	return parts.length >= 2 && !isNovelCoverEntry(entry);
+}
+
+// 生成静态路径
+export async function getStaticPaths() {
+	const allNovelEntries = await getCollection("novels");
+
+	const paths = allNovelEntries
+		.filter((entry) => {
+			const parts = entry.id.replace(/^\/+|\/+$/g, "").split("/").filter(Boolean);
+			return parts.length === 1 || (parts.length === 2 && parts[0] === parts[1]);
+		})
+		.map((entry) => ({
+			params: {
+				novelSlug: entry.id.replace(/^\/+|\/+$/g, "").split("/").filter(Boolean)[0],
+			},
+			props: { entry },
+		}));
+
+	return paths;
+}
+
+interface Props {
+	entry: CollectionEntry<"novels">;
+}
+
+const { entry } = Astro.props as Props;
+const { Content } = await render(entry);
+const novelDir = getIdParts(entry.id)[0];
+
+// 获取所有小说
+const allNovelEntries = await getCollection("novels");
+
+// 获取这个小说的所有章节
+const chapterFiles = allNovelEntries.filter((entryItem) => {
+	const parts = getIdParts(entryItem.id);
+	return parts[0] === novelDir && isNovelChapterEntry(entryItem);
+});
+
+// 按章节号排序
+chapterFiles.sort((a, b) => {
+	const numA = a.data.chapterNumber || 999;
+	const numB = b.data.chapterNumber || 999;
+	return numA - numB;
+});
+
+const novelTitle = entry.data.title;
+---
+
+<MainGridLayout title={novelTitle}>
+	<div class="prose dark:prose-invert max-w-none">
+		<div class="mb-8">
+			<h1>{novelTitle}</h1>
+
+			<div class="flex flex-wrap gap-4 my-4 text-sm">
+				{
+					entry.data.author && (
+						<p>
+							<strong>作者:</strong> {entry.data.author}
+						</p>
+					)
+				}
+				{
+					entry.data.status && (
+						<p>
+							<strong>状态:</strong>
+							<span class="font-semibold text-blue-600 dark:text-blue-400">
+								{entry.data.status}
+							</span>
+						</p>
+					)
+				}
+			</div>
+
+			{
+				entry.data.tags && entry.data.tags.length > 0 && (
+					<div class="flex flex-wrap gap-2 mb-4">
+						{entry.data.tags.map((tag) => (
+							<span class="px-3 py-1 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 text-sm">
+								{tag}
+							</span>
+						))}
+					</div>
+				)
+			}
+		</div>
+
+		<div class="my-8 p-4 bg-gray-50 dark:bg-gray-900 rounded-lg">
+			<Content />
+		</div>
+
+		<hr class="my-8" />
+
+		<h2>章节列表</h2>
+
+		<div class="space-y-2">
+			{
+				chapterFiles.length > 0 ? (
+					chapterFiles.map((chapter) => {
+						const chapterParts = getIdParts(chapter.id);
+						const chapterFileName = chapterParts[chapterParts.length - 1]
+							.replace(/\.md$/, "")
+							.replace(/^\d+-/, "");
+
+						return (
+							<a
+								href={`/novels/${novelDir}/${chapterFileName}/`}
+								class="block p-3 rounded border border-gray-200 dark:border-gray-700 hover:bg-blue-50 dark:hover:bg-blue-900/30 hover:border-blue-500 dark:hover:border-blue-400 transition-colors"
+							>
+								<h3 class="font-semibold">{chapter.data.title}</h3>
+								{chapter.data.published && (
+									<p class="text-xs text-gray-500 dark:text-gray-400">
+										{new Date(chapter.data.published).toLocaleDateString("zh-CN")}
+									</p>
+								)}
+							</a>
+						);
+					})
+				) : (
+					<p class="text-gray-500 dark:text-gray-400">暂无章节</p>
+				)
+			}
+		</div>
+	</div>
+</MainGridLayout>

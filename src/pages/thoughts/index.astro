@@ -1,0 +1,35 @@
+---
+import type { CollectionEntry } from "astro:content";
+import { getCollection } from "astro:content";
+import MainGridLayout from "@layouts/MainGridLayout.astro";
+
+const all = await getCollection("thoughts");
+const thoughts = all.filter((entry) => entry.id.split("/")[entry.id.split("/").length - 1] === "index.md");
+
+thoughts.sort((a, b) => {
+	const dateA = new Date(a.data.published || 0).getTime();
+	const dateB = new Date(b.data.published || 0).getTime();
+	return dateB - dateA;
+});
+---
+
+<MainGridLayout title="简思">
+	<div class="prose dark:prose-invert max-w-none">
+		<h1>简思</h1>
+		<p>简短的想法展示。</p>
+
+		<div class="space-y-4 mt-6">
+			{thoughts.map((t) => {
+				const slug = t.id.split("/")[0];
+				return (
+					<a href={`/thoughts/${slug}/`} class="block p-3 rounded border hover:border-blue-500">
+						<h2 class="font-medium">{t.data.title}</h2>
+						{t.data.description && <p class="text-sm text-gray-600">{t.data.description}</p>}
+					</a>
+				);
+			})}
+		</div>
+
+		{thoughts.length === 0 && <p class="text-gray-500">暂无简思</p>}
+	</div>
+</MainGridLayout>

@@ -43,7 +43,48 @@ const specCollection = defineCollection({
 	loader: glob({ pattern: "**/*.md", base: "./src/content/spec" }),
 	schema: z.object({}),
 });
+
+const novelsCollection = defineCollection({
+	loader: glob({ pattern: "**/*.md", base: "./src/content/novels" }),
+	schema: z.object({
+		title: z.string(),
+		published: z.date().optional(),
+		draft: z.boolean().optional().default(false),
+		description: z.string().optional().default(""),
+		author: z.string().optional().default(""),
+		status: z.string().optional().default("连载中"),
+		tags: z.array(z.string()).optional().default([]),
+		cover: z.string().optional().default(""),
+		chapterNumber: z.number().optional(),
+	}),
+});
+
+const essaysCollection = defineCollection({
+	loader: glob({ pattern: "**/*.md", base: "./src/content/essays" }),
+	schema: z.object({
+		title: z.string(),
+		published: z.date().optional(),
+		draft: z.boolean().optional().default(false),
+		description: z.string().optional().default(""),
+		tags: z.array(z.string()).optional().default([]),
+		author: z.string().optional().default(""),
+	}),
+});
+
+const thoughtsCollection = defineCollection({
+	loader: glob({ pattern: "**/*.md", base: "./src/content/thoughts" }),
+	schema: z.object({
+		title: z.string(),
+		published: z.date().optional(),
+		draft: z.boolean().optional().default(false),
+		description: z.string().optional().default(""),
+	}),
+});
+
 export const collections = {
 	posts: postsCollection,
 	spec: specCollection,
+	novels: novelsCollection,
+	essays: essaysCollection,
+	thoughts: thoughtsCollection,
 };
