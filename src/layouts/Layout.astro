@@ -875,6 +875,16 @@ function disableAnimation() {
 				event.preventDefault();
 				event.stopPropagation();
 				Fancybox.close(false);
+				return;
+			}
+
+			const closeButton = document.querySelector(
+				".fancybox__container.is-open .f-button.is-close-button, .fancybox__container.is-open .fancybox__button--close",
+			) as HTMLElement | null;
+			if (closeButton) {
+				event.preventDefault();
+				event.stopPropagation();
+				closeButton.click();
 			}
 		}, true);
 
@@ -888,17 +898,86 @@ function disableAnimation() {
 		}
 	}
 
+	function isImageLink(value: string) {
+		if (!value) return false;
+		if (/^data:image\//i.test(value)) return true;
+		return /\.(avif|bmp|gif|jpe?g|jfif|pjpeg|pjp|png|svg|webp)(\?.*)?(#.*)?$/i.test(value);
+	}
+
+	function ensureFancyboxTargets() {
+		const imageNodes = document.querySelectorAll(
+			".custom-md img, #post-cover img, .moment-images img",
+		);
+
+		imageNodes.forEach((node) => {
+			const img = node as HTMLImageElement;
+			const source = img.currentSrc || img.getAttribute("src") || "";
+			if (!source) return;
+
+			const group = img.closest(".moment-images")
+				? "moment-gallery"
+				: img.closest("#post-cover")
+					? "post-cover-gallery"
+					: "content-gallery";
+
+			const existingFancyboxAnchor = img.closest("a[data-fancybox]") as HTMLAnchorElement | null;
+			if (existingFancyboxAnchor) {
+				if (!existingFancyboxAnchor.getAttribute("href")) {
+					existingFancyboxAnchor.setAttribute("href", source);
+				}
+				if (!existingFancyboxAnchor.getAttribute("data-caption") && img.alt) {
+					existingFancyboxAnchor.setAttribute("data-caption", img.alt);
+				}
+				return;
+			}
+
+			const parentAnchor = img.closest("a") as HTMLAnchorElement | null;
+			if (parentAnchor) {
+				const href = parentAnchor.getAttribute("href") || "";
+				if (href && !isImageLink(href)) {
+					return;
+				}
+
+				if (!href) {
+					parentAnchor.setAttribute("href", source);
+				}
+
+				parentAnchor.setAttribute("data-fancybox", group);
+				if (!parentAnchor.getAttribute("data-caption") && img.alt) {
+					parentAnchor.setAttribute("data-caption", img.alt);
+				}
+				return;
+			}
+
+			const wrapper = document.createElement("a");
+			wrapper.setAttribute("href", source);
+			wrapper.setAttribute("data-fancybox", group);
+			if (img.alt) {
+				wrapper.setAttribute("data-caption", img.alt);
+			}
+
+			img.parentNode?.insertBefore(wrapper, img);
+			wrapper.appendChild(img);
+		});
+
+		const fancyboxAnchors = document.querySelectorAll("a[data-fancybox]");
+		fancyboxAnchors.forEach((anchorNode) => {
+			const anchor = anchorNode as HTMLAnchorElement;
+			if (!anchor.getAttribute("href")) {
+				const dataSrc = anchor.getAttribute("data-src") || "";
+				if (dataSrc) {
+					anchor.setAttribute("href", dataSrc);
+				}
+			}
+		});
+	}
+
 	// 图片灯箱按需加载
 	async function initFancybox() {
-		const albumImagesSelector =
-			".custom-md img, #post-cover img, .moment-images img, .prose img";
-		const albumLinksSelector = ".moment-images a[data-fancybox]";
-		const singleFancyboxSelector = "[data-fancybox]:not(.moment-images a)";
+		ensureFancyboxTargets();
+		const fancyboxAnchorSelector = "a[data-fancybox]";
 
-		const hasImages =
-			document.querySelector(albumImagesSelector) ||
-			document.querySelector(albumLinksSelector) ||
-			document.querySelector(singleFancyboxSelector);
+		const hasImages = document.querySelector(fancyboxAnchorSelector);
 
 		if (!hasImages) return;
 
@@ -966,28 +1045,15 @@ function disableAnimation() {
 			caption: false,
 		};
 
-		// 绑定相册/文章图片
-		Fancybox.bind(albumImagesSelector, {
+		Fancybox.bind(fancyboxAnchorSelector, {
 			...commonConfig,
-			groupAll: true,
+			groupAll: false,
 			Carousel: {
 				transition: "slide",
 				preload: 2,
 			},
 		});
-		fancyboxSelectors.push(albumImagesSelector);
-
-		Fancybox.bind(albumLinksSelector, {
-			...commonConfig,
-			source: (el: any) => {
-				return el.getAttribute("data-src") || el.getAttribute("href");
-			},
-		});
-		fancyboxSelectors.push(albumLinksSelector);
-
-		// 绑定单独的 fancybox 图片
-		Fancybox.bind(singleFancyboxSelector, commonConfig);
-		fancyboxSelectors.push(singleFancyboxSelector);
+		fancyboxSelectors.push(fancyboxAnchorSelector);
 	}
 
 	// 清理 Fancybox 实例

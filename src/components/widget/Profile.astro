@@ -15,22 +15,44 @@ const umamiBaseUrl = umamiConfig.baseUrl || "";
 
 const pathname = Astro.url.pathname || "/";
 
-let displayName = profileConfig.name;
-let displayBio = profileConfig.bio || "";
+function getProfileDisplayByPath(currentPathname: string) {
+    if (currentPathname === "/") {
+        return {
+            name: "主页",
+            bio: "欢迎来到我的主页",
+        };
+    }
 
-if (pathname === "/") {
-    displayName = "主页";
-    displayBio = "欢迎来到我的主页";
-} else if (pathname.startsWith("/novels")) {
-    displayName = "小说";
-    displayBio = "我的小说收藏";
-} else if (pathname.startsWith("/essays")) {
-    displayName = "随笔";
-    displayBio = "我的随笔记录";
-} else if (pathname.startsWith("/thoughts")) {
-    displayName = "简思";
-    displayBio = "我的简思片段";
+    if (currentPathname.startsWith("/novels")) {
+        return {
+            name: "小说",
+            bio: "我的小说收藏",
+        };
+    }
+
+    if (currentPathname.startsWith("/essays")) {
+        return {
+            name: "随笔",
+            bio: "我的随笔记录",
+        };
+    }
+
+    if (currentPathname.startsWith("/thoughts")) {
+        return {
+            name: "简思",
+            bio: "我的简思片段",
+        };
+    }
+
+    return {
+        name: profileConfig.name,
+        bio: profileConfig.bio || "",
+    };
 }
+
+const pageDisplay = getProfileDisplayByPath(pathname);
+const displayName = pageDisplay.name;
+const displayBio = pageDisplay.bio;
 ---
 
 <div class="card-base p-3">
@@ -46,10 +68,10 @@ if (pathname === "/") {
         <ImageWrapper src={profileConfig.avatar || ""} alt="Profile Image of the Author" class="mx-auto lg:w-full h-full lg:mt-0 "></ImageWrapper>
     </a>
     <div class="px-2">
-        <div class="font-bold text-xl text-center mb-1 dark:text-neutral-50 transition">{displayName}</div>
+        <div class="font-bold text-xl text-center mb-1 dark:text-neutral-50 transition js-profile-display-name">{displayName}</div>
         <div class="h-1 w-5 bg-[var(--primary)] mx-auto rounded-full mb-2 transition"></div>
         
-        <div class="text-center text-neutral-400 mb-2.5 transition">
+        <div class="text-center text-neutral-400 mb-2.5 transition js-profile-display-bio">
             {profileConfig.typewriter?.enable ? (
                 <TypewriterText 
                     text={displayBio}
@@ -86,6 +108,80 @@ if (pathname === "/") {
         )}
     </div>
 </div>
+
+<script is:inline>
+    (() => {
+        if (window.__profilePathSyncInitialized) {
+            return;
+        }
+        window.__profilePathSyncInitialized = true;
+
+        function getProfileDisplayByPath(currentPathname) {
+            if (currentPathname === "/") {
+                return {
+                    name: "主页",
+                    bio: "欢迎来到我的主页",
+                };
+            }
+
+            if (currentPathname.startsWith("/novels")) {
+                return {
+                    name: "小说",
+                    bio: "我的小说收藏",
+                };
+            }
+
+            if (currentPathname.startsWith("/essays")) {
+                return {
+                    name: "随笔",
+                    bio: "我的随笔记录",
+                };
+            }
+
+            if (currentPathname.startsWith("/thoughts")) {
+                return {
+                    name: "简思",
+                    bio: "我的简思片段",
+                };
+            }
+
+            const fallbackNameNode = document.querySelector(".js-profile-display-name");
+            const fallbackBioNode = document.querySelector(".js-profile-display-bio");
+
+            return {
+                name: fallbackNameNode?.textContent?.trim() || "",
+                bio: fallbackBioNode?.textContent?.trim() || "",
+            };
+        }
+
+        function applyProfileDisplayByPath() {
+            const { name, bio } = getProfileDisplayByPath(window.location.pathname || "/");
+            const nameNodes = document.querySelectorAll(".js-profile-display-name");
+            const bioNodes = document.querySelectorAll(".js-profile-display-bio");
+
+            nameNodes.forEach((node) => {
+                node.textContent = name;
+            });
+
+            bioNodes.forEach((node) => {
+                node.textContent = bio;
+            });
+        }
+
+        if (document.readyState === "loading") {
+            document.addEventListener("DOMContentLoaded", applyProfileDisplayByPath);
+        } else {
+            applyProfileDisplayByPath();
+        }
+
+        document.addEventListener("swup:page:view", applyProfileDisplayByPath);
+        window.addEventListener("popstate", applyProfileDisplayByPath);
+
+        if (window.swup?.hooks) {
+            window.swup.hooks.on("page:view", applyProfileDisplayByPath);
+        }
+    })();
+</script>
 
 {umamiEnabled && (
     <script is:inline type="module" define:vars={{ 
