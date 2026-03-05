@@ -33,25 +33,29 @@ const style = Astro.props.style;
     .mizuki-backdrop-preview-overlay {
         position: fixed;
         inset: 0;
-        z-index: 1400;
-        display: none;
-        align-items: center;
-        justify-content: center;
-        padding: 1rem;
-        background: color-mix(in oklch, var(--deep-text) 78%, var(--page-bg) 22%);
+        z-index: 2147483000;
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+        background: transparent;
+        transition: opacity 0.18s ease, visibility 0.18s ease;
         cursor: zoom-out;
     }
 
     .mizuki-backdrop-preview-overlay.is-open {
-        display: flex;
+        opacity: 1;
+        visibility: visible;
+        pointer-events: auto;
     }
 
-    .mizuki-backdrop-preview-image {
-        max-width: min(96vw, 1440px);
-        max-height: 94vh;
-        object-fit: contain;
-        border-radius: calc(var(--radius-large) - 0.35rem);
-        box-shadow: 0 0 0 1px var(--line-color);
+    body.mizuki-backdrop-preview-open #top-row,
+    body.mizuki-backdrop-preview-open #main-grid,
+    body.mizuki-backdrop-preview-open #toc-wrapper,
+    body.mizuki-backdrop-preview-open .floating-toc-wrapper,
+    body.mizuki-backdrop-preview-open .back-to-top-wrapper {
+        opacity: 0 !important;
+        visibility: hidden !important;
+        pointer-events: none !important;
     }
 
     [data-backdrop-preview-trigger].is-disabled {
@@ -123,7 +127,6 @@ const style = Astro.props.style;
             overlay = document.createElement("div");
             overlay.id = OVERLAY_ID;
             overlay.className = "mizuki-backdrop-preview-overlay";
-            overlay.innerHTML = '<img class="mizuki-backdrop-preview-image" alt="背景预览" />';
 
             overlay.addEventListener("click", () => {
                 closeOverlay();
@@ -138,10 +141,6 @@ const style = Astro.props.style;
             if (!(overlay instanceof HTMLDivElement)) return;
 
             overlay.classList.remove("is-open");
-            const image = overlay.querySelector(
-                ".mizuki-backdrop-preview-image",
-            ) as HTMLImageElement | null;
-            image?.removeAttribute("src");
 
             document.documentElement.classList.remove(
                 "mizuki-backdrop-preview-open",
@@ -149,16 +148,8 @@ const style = Astro.props.style;
             document.body.classList.remove("mizuki-backdrop-preview-open");
         }
 
-        function openOverlay(backdrop: string) {
-            if (!backdrop) return;
-
+        function openOverlay() {
             const overlay = ensureOverlay();
-            const image = overlay.querySelector(
-                ".mizuki-backdrop-preview-image",
-            ) as HTMLImageElement | null;
-            if (!image) return;
-
-            image.setAttribute("src", backdrop);
             overlay.classList.add("is-open");
             document.documentElement.classList.add("mizuki-backdrop-preview-open");
             document.body.classList.add("mizuki-backdrop-preview-open");
@@ -212,14 +203,19 @@ const style = Astro.props.style;
 
                 if (!currentBackdrop) {
                     event.preventDefault();
+                    event.stopPropagation();
                     return;
                 }
 
                 event.preventDefault();
+                event.stopPropagation();
+                if (typeof event.stopImmediatePropagation === "function") {
+                    event.stopImmediatePropagation();
+                }
                 trigger.dataset.backdrop = currentBackdrop;
                 trigger.classList.remove("is-disabled");
                 trigger.removeAttribute("disabled");
-                openOverlay(currentBackdrop);
+                openOverlay();
             });
 
             document.addEventListener("keydown", (event) => {

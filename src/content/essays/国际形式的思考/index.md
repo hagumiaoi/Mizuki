@@ -1,5 +1,5 @@
 ---
-title: 示例随笔
+title: 国际形势的思考
 description: 随笔示例，展示 `essays` 集合的用法。
 author: 编辑
 published: 2026-02-14

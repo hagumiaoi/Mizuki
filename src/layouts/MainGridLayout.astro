@@ -935,17 +935,36 @@ const normalizedContentBackdrop =
 <style>
 
 #main-surface-layer {
+    --main-surface-blend-height: clamp(3.5rem, 10vh, 7rem);
     background-color: var(--page-bg);
     background-image: none;
     background-position: center top;
     background-size: cover;
     background-repeat: no-repeat;
     transition: background-image 0.35s ease;
+    isolation: isolate;
 }
 
 #main-surface-layer.has-main-surface-backdrop {
-    background-color: transparent;
+    background-color: var(--page-bg);
+    background-image: none;
+}
+
+#main-surface-layer.has-main-surface-backdrop::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
     background-image: var(--main-surface-backdrop);
+    background-position: center top;
+    background-size: cover;
+    background-repeat: no-repeat;
+}
+
+body.enable-banner #main-surface-layer.has-main-surface-backdrop::before {
+    -webkit-mask-image: linear-gradient(to bottom, #000 0, #000 100%);
+    mask-image: linear-gradient(to bottom, #000 0, #000 100%);
 }
 
 /* Banner text styles */
@@ -997,7 +1016,11 @@ body.wallpaper-transparent #toc-inner-wrapper:has(table-of-contents[data-loaded=
 /* 桌面端 banner 模式下的主内容区域位置 */
 @media (min-width: 1280px) {
     body.enable-banner .absolute.w-full.z-30 {
-        top: calc(35vh + var(--banner-height-extend)) !important;
+        top: calc(35vh - 2px) !important;
+    }
+
+    body.enable-banner.is-home .absolute.w-full.z-30 {
+        top: calc(35vh + var(--banner-height-extend) - 2px) !important;
     }
 }
 

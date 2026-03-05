@@ -9,7 +9,7 @@ export const LinkPresets: { [key in LinkPreset]: NavBarLink } = {
 		icon: "material-symbols:home",
 	},
 	[LinkPreset.About]: {
-		name: i18n(I18nKey.about),
+		name: "关于moi",
 		url: "/about/",
 		icon: "material-symbols:person",
 	},
