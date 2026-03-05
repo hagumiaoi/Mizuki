@@ -94,15 +94,15 @@ function getChapterUrl(chapterEntry: CollectionEntry<"essays">) {
 ---
 
 <MainGridLayout title={entry.data.title}>
-	<div class="prose dark:prose-invert max-w-none reading-content">
-		<div class="mb-8 pb-8 border-b border-gray-200 dark:border-gray-700">
+	<div class="prose dark:prose-invert max-w-none reading-content essay-reading-theme">
+		<div class="mb-8 essay-meta-panel">
 			<div class="mb-4">
-				<a href={`/essays/${essaySlug}/`} class="text-blue-600 dark:text-blue-400 hover:underline">
+				<a href={`/essays/${essaySlug}/`} class="reading-nav-link">
 					← 返回 {essayInfo?.data.title}
 				</a>
 			</div>
 
-			<h1>{entry.data.title}</h1>
+			<h1 class="essay-aurora-title">{entry.data.title}</h1>
 
 			{entry.data.published && (
 				<p class="text-sm text-gray-500 dark:text-gray-400">
@@ -120,7 +120,7 @@ function getChapterUrl(chapterEntry: CollectionEntry<"essays">) {
 				{prevChapter ? (
 					<a
 						href={getChapterUrl(prevChapter)}
-						class="text-blue-600 dark:text-blue-400 hover:underline"
+						class="reading-nav-link"
 					>
 						← 上一章: {prevChapter.data.title}
 					</a>
@@ -130,7 +130,7 @@ function getChapterUrl(chapterEntry: CollectionEntry<"essays">) {
 
 				<a
 					href={`/essays/${essaySlug}/`}
-					class="text-blue-600 dark:text-blue-400 hover:underline"
+					class="reading-nav-link"
 				>
 					章节列表
 				</a>
@@ -138,7 +138,7 @@ function getChapterUrl(chapterEntry: CollectionEntry<"essays">) {
 				{nextChapter ? (
 					<a
 						href={getChapterUrl(nextChapter)}
-						class="text-blue-600 dark:text-blue-400 hover:underline"
+						class="reading-nav-link"
 					>
 						下一章: {nextChapter.data.title} →
 					</a>

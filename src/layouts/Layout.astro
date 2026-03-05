@@ -307,6 +307,17 @@ if (siteConfig.font) {
 			const hue = localStorage.getItem("hue") || configHue;
 			document.documentElement.style.setProperty("--hue", hue);
 
+			const articleFontScale = Number.parseFloat(
+				localStorage.getItem("mizuki-article-font-scale") || "1",
+			);
+			const normalizedArticleFontScale = Number.isFinite(articleFontScale)
+				? Math.min(2, Math.max(0.85, articleFontScale))
+				: 1;
+			document.documentElement.style.setProperty(
+				"--mizuki-article-font-scale",
+				normalizedArticleFontScale.toFixed(2),
+			);
+
 			// calculate the --banner-height-extend, which needs to be a multiple of 4 to avoid blurry text
 			let offset = Math.floor(
 				window.innerHeight * (BANNER_HEIGHT_EXTEND / 100),
@@ -1055,6 +1066,143 @@ function disableAnimation() {
 		};
 	}
 
+	const ARTICLE_FONT_SCALE_STORAGE_KEY = "mizuki-article-font-scale";
+	const ARTICLE_FONT_SCALE_CSS_VAR = "--mizuki-article-font-scale";
+	const ARTICLE_FONT_SCALE_MIN = 0.85;
+	const ARTICLE_FONT_SCALE_MAX = 2;
+
+	function clampArticleFontScale(scale: number) {
+		if (!Number.isFinite(scale)) return 1;
+		return Math.min(ARTICLE_FONT_SCALE_MAX, Math.max(ARTICLE_FONT_SCALE_MIN, scale));
+	}
+
+	function readArticleFontScale() {
+		const savedScale = Number.parseFloat(
+			localStorage.getItem(ARTICLE_FONT_SCALE_STORAGE_KEY) || "1",
+		);
+		return clampArticleFontScale(savedScale);
+	}
+
+	function applyArticleFontScale(scale: number) {
+		const normalizedScale = clampArticleFontScale(scale);
+		document.documentElement.style.setProperty(
+			ARTICLE_FONT_SCALE_CSS_VAR,
+			normalizedScale.toFixed(2),
+		);
+		return normalizedScale;
+	}
+
+	function persistArticleFontScale(scale: number) {
+		localStorage.setItem(ARTICLE_FONT_SCALE_STORAGE_KEY, scale.toFixed(2));
+	}
+
+	function updateArticleFontControllerState(scale: number) {
+		const roundedScale = `${Math.round(scale * 100)}%`;
+		document
+			.querySelectorAll(".mizuki-font-size-value")
+			.forEach((node) => {
+				node.textContent = roundedScale;
+			});
+
+		document
+			.querySelectorAll(
+				".mizuki-font-size-range",
+			)
+			.forEach((node) => {
+				const rangeInput = node as HTMLInputElement;
+				rangeInput.value = String(Math.round(scale * 100));
+			});
+
+		document
+			.querySelectorAll(".mizuki-font-size-reset")
+			.forEach((node) => {
+				const button = node as HTMLButtonElement;
+				button.disabled = Math.abs(scale - 1) < 0.01;
+			});
+	}
+
+	function setArticleFontScale(scale: number, persist = true) {
+		const normalizedScale = applyArticleFontScale(scale);
+		if (persist) {
+			persistArticleFontScale(normalizedScale);
+		}
+		updateArticleFontControllerState(normalizedScale);
+		return normalizedScale;
+	}
+
+	function removeArticleFontController() {
+		document
+			.querySelectorAll(".mizuki-font-size-controller")
+			.forEach((node) => node.remove());
+	}
+
+	function initArticleFontController() {
+		const contentBlocks = Array.from(
+			document.querySelectorAll(".custom-md"),
+		) as HTMLElement[];
+
+		if (!contentBlocks.length) {
+			removeArticleFontController();
+			return;
+		}
+
+		const initialScale = applyArticleFontScale(readArticleFontScale());
+		removeArticleFontController();
+
+		const target = contentBlocks[0];
+		if (!target) return;
+
+		const controller = document.createElement("div");
+		controller.className = "mizuki-font-size-controller";
+		controller.innerHTML = `
+			<div class="mizuki-font-size-controller__panel" role="group" aria-label="正文字号调整">
+				<span class="mizuki-font-size-label" aria-hidden="true">A</span>
+				<input
+					type="range"
+					class="mizuki-font-size-range"
+					min="${Math.round(ARTICLE_FONT_SCALE_MIN * 100)}"
+					max="${Math.round(ARTICLE_FONT_SCALE_MAX * 100)}"
+					step="1"
+					value="${Math.round(initialScale * 100)}"
+					aria-label="正文字号滑动调整"
+				/>
+				<span class="mizuki-font-size-value">${Math.round(initialScale * 100)}%</span>
+				<button type="button" class="mizuki-font-size-reset" aria-label="恢复默认字号">100%</button>
+			</div>
+		`;
+
+		const rangeInput = controller.querySelector(
+			".mizuki-font-size-range",
+		) as HTMLInputElement | null;
+
+		if (rangeInput) {
+			rangeInput.addEventListener("input", (event) => {
+				const input = event.target as HTMLInputElement;
+				const scale = Number.parseFloat(input.value) / 100;
+				setArticleFontScale(scale, false);
+			});
+
+			rangeInput.addEventListener("change", (event) => {
+				const input = event.target as HTMLInputElement;
+				const scale = Number.parseFloat(input.value) / 100;
+				setArticleFontScale(scale, true);
+			});
+		}
+
+		const resetButton = controller.querySelector(
+			".mizuki-font-size-reset",
+		) as HTMLButtonElement | null;
+
+		if (resetButton) {
+			resetButton.addEventListener("click", () => {
+				setArticleFontScale(1, true);
+			});
+		}
+
+		target.prepend(controller);
+		updateArticleFontControllerState(initialScale);
+	}
+
 	const setup = () => {
 		// TODO: temp solution to change the height of the banner
 		/*
@@ -1091,6 +1239,7 @@ function disableAnimation() {
 		window.swup.hooks.on("content:replace", () => {
 			// 初始化新页面的图片、公式、滚动条和TOC
 			initImagePreview();
+			initArticleFontController();
 			checkKatex();
 			initCustomScrollbar();
 
@@ -1317,6 +1466,7 @@ function disableAnimation() {
 
 	if (window?.swup?.hooks) {
 		initImagePreview();
+		initArticleFontController();
 		checkKatex();
 		setup();
 	} else {
@@ -1325,10 +1475,12 @@ function disableAnimation() {
 		if (document.readyState === "loading") {
 			document.addEventListener("DOMContentLoaded", () => {
 				initImagePreview();
+				initArticleFontController();
 				checkKatex();
 			});
 		} else {
 			initImagePreview();
+			initArticleFontController();
 			checkKatex();
 		}
 	}
@@ -1404,7 +1556,7 @@ function disableAnimation() {
 
 				const threshold =
 					window.innerHeight * (currentBannerHeight / 100) - 88;
-				if (scrollTop >= threshold) {
+				if (isHome && scrollTop >= threshold) {
 					navbar.classList.add("navbar-hidden");
 				} else {
 					navbar.classList.remove("navbar-hidden");

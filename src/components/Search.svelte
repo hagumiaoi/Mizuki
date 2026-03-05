@@ -300,7 +300,9 @@ onDestroy(() => {
 		const navbar = document.getElementById("navbar");
 		navbar?.classList.remove("is-searching");
 	}
-	window.removeEventListener("focus", handleWindowFocus);
+	if (typeof window !== "undefined") {
+		window.removeEventListener("focus", handleWindowFocus);
+	}
 	clearTimeout(debounceTimer);
 	clearTimeout(focusTimer);
 	clearTimeout(blurTimer);

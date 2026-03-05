@@ -90,7 +90,7 @@ export const siteConfig: SiteConfig = {
 		// "mobile" = 仅在移动端显示
 		// "desktop" = 仅在桌面端显示
 		// "both" = 在所有设备上显示
-		showModeSwitchOnMobile: "desktop",
+		showModeSwitchOnMobile: "off",
 	},
 
 	banner: {
@@ -187,22 +187,18 @@ export const siteConfig: SiteConfig = {
 
 	// 字体配置
 	font: {
-		// 注意：自定义字体需要在 src/styles/main.css 中引入字体文件
-		// 注意：字体子集优化功能目前仅支持 TTF 格式字体,开启后需要在生产环境才能看到效果,在Dev环境下显示的是浏览器默认字体!
+		// 统一字体为无衬线风格
 		asciiFont: {
-			// 英文字体 - 优先级最高
-			// 指定为英文字体则无论字体包含多大范围，都只会保留 ASCII 字符子集
-			fontFamily: "ZenMaruGothic-Medium",
+			fontFamily: "Inter",
 			fontWeight: "400",
-			localFonts: ["ZenMaruGothic-Medium.ttf"],
-			enableCompress: true, // 启用字体子集优化，减少字体文件大小
+			localFonts: [],
+			enableCompress: false,
 		},
 		cjkFont: {
-			// 中日韩字体 - 作为回退字体
-			fontFamily: "萝莉体 第二版",
+			fontFamily: "Noto Sans SC",
 			fontWeight: "500",
-			localFonts: ["萝莉体 第二版.ttf"],
-			enableCompress: true, // 启用字体子集优化，减少字体文件大小
+			localFonts: [],
+			enableCompress: false,
 		},
 	},
 	showLastModified: true, // 控制“上次编辑”卡片显示的开关
@@ -247,7 +243,7 @@ export const navBarConfig: NavBarConfig = {
 };
 
 export const profileConfig: ProfileConfig = {
-	avatar: "assets/images/avatar.webp", // 相对于 /src 目录。如果以 '/' 开头，则相对于 /public 目录
+	avatar: "/images/profile/avatar.webp", // 头像文件位置：/public/images/profile/avatar.webp（可直接替换为你的图片）
 	name: "小说库",
 	bio: "我的小说收藏",
 	typewriter: {
@@ -349,8 +345,8 @@ export const sidebarLayoutConfig: SidebarLayoutConfig = {
 		{
 			// 组件类型：用户资料组件
 			type: "profile",
-			// 组件位置："top" 表示固定在顶部
-			position: "top",
+			// 组件位置："sticky" 表示随侧栏滚动时持续可见
+			position: "sticky",
 			// CSS 类名，用于应用样式和动画
 			class: "onload-animation",
 			// 动画延迟时间（毫秒），用于错开动画效果
@@ -359,8 +355,8 @@ export const sidebarLayoutConfig: SidebarLayoutConfig = {
 		{
 			// 组件类型：公告组件
 			type: "announcement",
-			// 组件位置："top" 表示固定在顶部
-			position: "top",
+			// 组件位置："sticky" 表示随侧栏滚动时持续可见
+			position: "sticky",
 			// CSS 类名
 			class: "onload-animation",
 			// 动画延迟时间
@@ -385,7 +381,7 @@ export const sidebarLayoutConfig: SidebarLayoutConfig = {
 			// 组件类型：标签组件
 			type: "tags",
 			// 组件位置："sticky" 表示粘性定位
-			position: "top",
+			position: "sticky",
 			// CSS 类名
 			class: "onload-animation",
 			// 动画延迟时间
@@ -400,7 +396,7 @@ export const sidebarLayoutConfig: SidebarLayoutConfig = {
 			// 组件类型：站点统计组件
 			type: "site-stats",
 			// 组件位置
-			position: "top",
+			position: "sticky",
 			// CSS 类名
 			class: "onload-animation",
 			// 动画延迟时间
@@ -410,7 +406,7 @@ export const sidebarLayoutConfig: SidebarLayoutConfig = {
 			// 组件类型：日历组件(移动端不显示)
 			type: "calendar",
 			// 组件位置
-			position: "top",
+			position: "sticky",
 			// CSS 类名
 			class: "onload-animation",
 			// 动画延迟时间
@@ -420,9 +416,9 @@ export const sidebarLayoutConfig: SidebarLayoutConfig = {
 
 	// 侧栏组件布局配置
 	components: {
-		left: ["profile", "announcement", "categories", "tags"],
+		left: ["profile", "announcement", "tags"],
 		right: ["site-stats", "calendar"],
-		drawer: ["profile", "announcement", "categories", "tags"],
+		drawer: ["profile", "announcement", "tags"],
 	},
 
 	// 默认动画配置

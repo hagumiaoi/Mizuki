@@ -4,6 +4,7 @@ import { Icon } from "astro-icon/components";
 import { siteConfig } from "../../config";
 import I18nKey from "../../i18n/i18nKey";
 import { i18n } from "../../i18n/translation";
+import { buildNovelCategories } from "../../utils/novel-structure";
 import WidgetLayout from "./WidgetLayout.astro";
 
 interface Props {
@@ -41,7 +42,10 @@ function isCollectionCoverEntry(id: string) {
 	return parts.length === 1 || (parts.length === 2 && parts[0] === parts[1]);
 }
 
-const novelsCount = novels.filter((entry) => isCollectionCoverEntry(entry.id)).length;
+const novelsCount = buildNovelCategories(novels).reduce(
+	(total, category) => total + category.works.length,
+	0,
+);
 const essaysCount = essays.filter((entry) => isCollectionCoverEntry(entry.id)).length;
 const thoughtsCount = thoughts.filter((entry) => isCollectionCoverEntry(entry.id)).length;
 

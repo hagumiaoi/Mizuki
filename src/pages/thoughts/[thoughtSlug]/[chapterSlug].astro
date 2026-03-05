@@ -94,15 +94,15 @@ function getChapterUrl(chapterEntry: CollectionEntry<"thoughts">) {
 ---
 
 <MainGridLayout title={entry.data.title}>
-	<div class="prose dark:prose-invert max-w-none reading-content">
-		<div class="mb-8 pb-8 border-b border-gray-200 dark:border-gray-700">
+	<div class="prose dark:prose-invert max-w-none reading-content thought-reading-theme">
+		<div class="mb-8 thought-meta-panel">
 			<div class="mb-4">
-				<a href={`/thoughts/${thoughtSlug}/`} class="text-blue-600 dark:text-blue-400 hover:underline">
+				<a href={`/thoughts/${thoughtSlug}/`} class="reading-nav-link">
 					← 返回 {thoughtInfo?.data.title}
 				</a>
 			</div>
 
-			<h1>{entry.data.title}</h1>
+			<h1 class="thought-starlight-title">{entry.data.title}</h1>
 
 			{entry.data.published && (
 				<p class="text-sm text-gray-500 dark:text-gray-400">
@@ -120,7 +120,7 @@ function getChapterUrl(chapterEntry: CollectionEntry<"thoughts">) {
 				{prevChapter ? (
 					<a
 						href={getChapterUrl(prevChapter)}
-						class="text-blue-600 dark:text-blue-400 hover:underline"
+						class="reading-nav-link"
 					>
 						← 上一章: {prevChapter.data.title}
 					</a>
@@ -130,7 +130,7 @@ function getChapterUrl(chapterEntry: CollectionEntry<"thoughts">) {
 
 				<a
 					href={`/thoughts/${thoughtSlug}/`}
-					class="text-blue-600 dark:text-blue-400 hover:underline"
+					class="reading-nav-link"
 				>
 					章节列表
 				</a>
@@ -138,7 +138,7 @@ function getChapterUrl(chapterEntry: CollectionEntry<"thoughts">) {
 				{nextChapter ? (
 					<a
 						href={getChapterUrl(nextChapter)}
-						class="text-blue-600 dark:text-blue-400 hover:underline"
+						class="reading-nav-link"
 					>
 						下一章: {nextChapter.data.title} →
 					</a>

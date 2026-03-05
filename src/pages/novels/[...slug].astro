@@ -216,20 +216,20 @@ const pageTitle =
 		title={pageTitle}
 		contentBackdrop={currentWork.coverEntry.data.cover || ""}
 	>
-		<div class="prose dark:prose-invert max-w-none reading-content">
-			<div class="mb-8">
+		<div class="prose dark:prose-invert max-w-none reading-content novel-reading-theme">
+			<div class="mb-8 novel-meta-panel">
 				{!currentWork.isLegacy && (
 					<div class="mb-4">
 						<a
 							href={`/novels/${category.categorySlug}/`}
-							class="text-blue-600 dark:text-blue-400 hover:underline"
+							class="reading-nav-link"
 						>
 							← 返回 {category.categoryTitle}
 						</a>
 					</div>
 				)}
 
-				<h1>{currentWork.coverEntry.data.title}</h1>
+				<h1 class="novel-night-title">{currentWork.coverEntry.data.title}</h1>
 
 				<div class="flex flex-wrap gap-4 my-4 text-sm">
 					{currentWork.coverEntry.data.author && (
@@ -270,13 +270,13 @@ const pageTitle =
 					currentWork.chapterEntries.map((chapter, index) => (
 						<a
 							href={getChapterPath(currentWork, chapter)}
-							class="group flex items-start gap-3 rounded-[var(--radius-large)] border border-[var(--line-color)] bg-[var(--card-bg)] px-4 py-3 transition-colors duration-150 hover:border-[var(--primary)] hover:bg-[var(--btn-card-bg-hover)]"
+							class="reading-chapter-card group flex items-start gap-3 rounded-[var(--radius-large)] border bg-[var(--card-bg)] px-4 py-3 transition-colors duration-150"
 						>
-							<span class="inline-flex h-7 min-w-7 items-center justify-center rounded-full bg-[var(--btn-regular-bg)] px-2 text-xs font-semibold text-[var(--btn-content)]">
+							<span class="reading-chapter-badge inline-flex h-7 min-w-7 items-center justify-center rounded-full px-2 text-xs font-semibold">
 								{chapter.data.chapterNumber || index + 1}
 							</span>
 							<div class="min-w-0 flex-1">
-								<h3 class="!m-0 text-base font-semibold text-black/80 transition-colors group-hover:text-[var(--primary)] dark:text-white/85">
+								<h3 class="reading-chapter-title !m-0 text-base font-semibold transition-colors">
 									{chapter.data.title}
 								</h3>
 								{chapter.data.published && (
@@ -285,7 +285,7 @@ const pageTitle =
 									</p>
 								)}
 							</div>
-							<span class="text-sm text-[var(--content-meta)] transition-colors group-hover:text-[var(--primary)]">→</span>
+							<span class="reading-chapter-arrow text-sm text-[var(--content-meta)] transition-colors">→</span>
 						</a>
 					))
 				) : (
@@ -298,15 +298,15 @@ const pageTitle =
 
 {pageType === "chapter" && currentWork && currentChapter && (
 	<MainGridLayout title={pageTitle}>
-		<div class="prose dark:prose-invert max-w-none reading-content">
-			<div class="mb-8 pb-8 border-b border-gray-200 dark:border-gray-700">
+		<div class="prose dark:prose-invert max-w-none reading-content novel-reading-theme">
+			<div class="mb-8 pb-8 border-b border-gray-200 dark:border-gray-700 novel-meta-panel">
 				<div class="mb-4">
-					<a href={getWorkPath(currentWork)} class="text-blue-600 dark:text-blue-400 hover:underline">
+					<a href={getWorkPath(currentWork)} class="reading-nav-link">
 						← 返回 {currentWork.coverEntry.data.title}
 					</a>
 				</div>
 
-				<h1>{currentChapter.data.title}</h1>
+				<h1 class="novel-night-title">{currentChapter.data.title}</h1>
 
 				{currentChapter.data.published && (
 					<p class="text-sm text-gray-500 dark:text-gray-400">
@@ -324,7 +324,7 @@ const pageTitle =
 					{prevChapter ? (
 						<a
 							href={getChapterPath(currentWork, prevChapter)}
-							class="text-blue-600 dark:text-blue-400 hover:underline"
+							class="reading-nav-link"
 						>
 							← 上一章: {prevChapter.data.title}
 						</a>
@@ -334,7 +334,7 @@ const pageTitle =
 
 					<a
 						href={getWorkPath(currentWork)}
-						class="text-blue-600 dark:text-blue-400 hover:underline"
+						class="reading-nav-link"
 					>
 						章节列表
 					</a>
@@ -342,7 +342,7 @@ const pageTitle =
 					{nextChapter ? (
 						<a
 							href={getChapterPath(currentWork, nextChapter)}
-							class="text-blue-600 dark:text-blue-400 hover:underline"
+							class="reading-nav-link"
 						>
 							下一章: {nextChapter.data.title} →
 						</a>
@@ -355,14 +355,86 @@ const pageTitle =
 	</MainGridLayout>
 )}
 
-{pageType === "chapter" && (
-	<style is:global>
-		main p, article p {
-			margin-top: 2rem !important;
-			margin-bottom: 2rem !important;
-			line-height: 1.8 !important;
-			font-size: 1.1rem;
-			letter-spacing: 0.03em;
-		}
-	</style>
-)}
+<style is:global>
+	.reading-content .novel-meta-panel {
+		position: relative;
+		padding: 1.15rem 1.2rem 1rem;
+		border-radius: var(--radius-large);
+		border: 1px solid color-mix(in oklch, var(--primary) 26%, var(--line-color) 74%);
+		background:
+			radial-gradient(circle at 84% 18%, color-mix(in oklch, var(--primary) 16%, transparent 84%) 0%, transparent 42%),
+			radial-gradient(circle at 14% 72%, color-mix(in oklch, var(--primary) 11%, transparent 89%) 0%, transparent 36%),
+			linear-gradient(135deg, color-mix(in oklch, var(--card-bg) 89%, var(--primary) 11%) 0%, color-mix(in oklch, var(--card-bg) 95%, var(--page-bg) 5%) 100%);
+		backdrop-filter: blur(8px);
+	}
+
+	.reading-content .novel-meta-panel :is(p, strong, a) {
+		color: color-mix(in oklch, var(--btn-content) 74%, var(--content-meta) 26%);
+	}
+
+	.reading-content .novel-meta-panel::before,
+	.reading-content .novel-meta-panel::after {
+		content: "✦";
+		position: absolute;
+		line-height: 1;
+		color: color-mix(in oklch, var(--primary) 68%, var(--card-bg) 32%);
+		text-shadow: 0 0 0.55rem color-mix(in oklch, var(--primary) 45%, transparent 55%);
+		opacity: 0.92;
+		pointer-events: none;
+	}
+
+	.reading-content .novel-meta-panel::before {
+		top: 0.55rem;
+		right: 0.85rem;
+		font-size: 0.82rem;
+	}
+
+	.reading-content .novel-meta-panel::after {
+		top: 1.2rem;
+		right: 1.7rem;
+		font-size: 0.55rem;
+		opacity: 0.72;
+	}
+
+	:root:not(.dark) .reading-content .novel-meta-panel {
+		background:
+			radial-gradient(circle at 84% 18%, color-mix(in oklch, var(--primary) 10%, transparent 90%) 0%, transparent 42%),
+			radial-gradient(circle at 14% 72%, color-mix(in oklch, var(--primary) 8%, transparent 92%) 0%, transparent 36%),
+			linear-gradient(135deg, color-mix(in oklch, var(--card-bg) 96%, var(--primary) 4%) 0%, color-mix(in oklch, var(--card-bg) 97%, var(--page-bg) 3%) 100%);
+	}
+
+	.reading-content .novel-night-title {
+		position: relative;
+		display: inline-flex;
+		align-items: center;
+		gap: 0.45rem;
+		color: color-mix(in oklch, var(--btn-content) 78%, var(--card-bg) 22%);
+		letter-spacing: 0.02em;
+		text-shadow:
+			0 0 0.45rem color-mix(in oklch, var(--primary) 42%, transparent 58%),
+			0 0 1.1rem color-mix(in oklch, var(--primary) 22%, transparent 78%);
+	}
+
+	:root:not(.dark) .reading-content .novel-night-title {
+		color: color-mix(in oklch, var(--deep-text) 82%, var(--btn-content) 18%);
+		text-shadow: 0 0 0.35rem color-mix(in oklch, var(--primary) 25%, transparent 75%);
+	}
+
+	.reading-content .novel-night-title::before,
+	.reading-content .novel-night-title::after {
+		content: "✦";
+		font-size: 0.62em;
+		line-height: 1;
+		opacity: 0.95;
+		color: color-mix(in oklch, var(--primary) 75%, var(--card-bg) 25%);
+		text-shadow: 0 0 0.6rem color-mix(in oklch, var(--primary) 45%, transparent 55%);
+	}
+
+	.reading-content .novel-night-title::before {
+		transform: translateY(-0.36em) scale(0.92);
+	}
+
+	.reading-content .novel-night-title::after {
+		transform: translateY(0.22em) scale(0.78);
+	}
+</style>

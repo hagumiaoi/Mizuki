@@ -596,7 +596,7 @@ const normalizedContentBackdrop =
 
 <!-- Navbar -->
 <slot slot="head" name="head"></slot>
-<div id="top-row" class="z-50 pointer-events-none relative transition-all duration-700 max-w-[var(--page-width)] px-0 md:px-4 mx-auto" class:list={[""]}>
+<div id="top-row" class="z-50 pointer-events-none relative transition-all duration-700 w-full px-0" class:list={[""]}>
     <div id="navbar-wrapper" class="pointer-events-auto sticky top-0 transition-all">
         <Navbar></Navbar>
     </div>
@@ -797,8 +797,8 @@ const normalizedContentBackdrop =
 <!-- Main content -->
 <div id="main-surface-layer" class={`absolute w-full z-30 pointer-events-none ${mobileNonHomeBannerClass ? 'mobile-main-no-banner' : ''} ${siteConfig.wallpaperMode.defaultMode === 'none' ? 'no-banner-layout' : ''} ${transparentClass}`} style={`top: ${finalMainPanelTop}`}>
     <!-- The pointer-events-none here prevent blocking the click event of the TOC -->
-    <div class="relative max-w-[var(--page-width)] mx-auto pointer-events-auto" style="z-index: 1;">
-        <div id="main-grid" class={`transition duration-700 w-full left-0 right-0 grid ${gridCols} grid-rows-none md:grid-rows-[auto] mx-auto gap-4 px-2 md:px-4 ${!mobileShowSidebar || !hasMobileDrawerComponents ? 'mobile-no-sidebar' : ''} ${hasRightSidebarComponents ? 'mobile-both-sidebar' : ''}`}
+    <div class="relative w-full pointer-events-auto" style="z-index: 1;">
+        <div id="main-grid" class={`transition duration-700 w-full left-0 right-0 grid ${gridCols} grid-rows-none md:grid-rows-[auto] mx-0 gap-4 px-0 ${!mobileShowSidebar || !hasMobileDrawerComponents ? 'mobile-no-sidebar' : ''} ${hasRightSidebarComponents ? 'mobile-both-sidebar' : ''}`}
              data-layout-mode={defaultPostListLayout}
         >
             <!-- Banner image credit -->
@@ -857,7 +857,7 @@ const normalizedContentBackdrop =
 <!-- 侧边栏TOC模式 -->
 {siteConfig.toc.enable && isSidebarTOC && (
     <div class="absolute w-full z-0 hidden 2xl:block">
-        <div class="relative max-w-[var(--page-width)] mx-auto">
+        <div class="relative w-full">
             <div id="toc-wrapper" class:list={["hidden lg:block transition absolute top-0 w-[var(--toc-width)] items-center",
                 "-right-[var(--toc-width)]",
                 {"toc-hide": siteConfig.wallpaperMode.defaultMode === "banner"}]}
@@ -928,6 +928,78 @@ const normalizedContentBackdrop =
             applyMainSurfaceBackdrop,
         );
         document.addEventListener("swup:page:view", applyMainSurfaceBackdrop);
+
+        function getVisibleSidebarGroup(stickyRootSelector) {
+            const stickyRoot = document.querySelector(stickyRootSelector);
+            if (!stickyRoot) return null;
+
+            const groups = Array.from(stickyRoot.children);
+            for (const group of groups) {
+                if (!(group instanceof HTMLElement)) continue;
+                if (window.getComputedStyle(group).display !== "none") {
+                    return group;
+                }
+            }
+
+            return null;
+        }
+
+        function collectLeftSidebarItems() {
+            const group = getVisibleSidebarGroup("#sidebar-sticky");
+            if (!group) return [];
+
+            return Array.from(group.children).filter((item) => item instanceof HTMLElement);
+        }
+
+        function collectRightSidebarItems() {
+            const stickyRoot = document.querySelector("#right-sidebar-sticky");
+            if (!(stickyRoot instanceof HTMLElement)) return [];
+
+            return Array.from(stickyRoot.children).filter((item) => item instanceof HTMLElement);
+        }
+
+        function clearSidebarPairHeights(leftItems, rightItems) {
+            [...leftItems, ...rightItems].forEach((item) => {
+                item.style.minHeight = "";
+            });
+        }
+
+        function syncSidebarPairAlignment() {
+            const leftItems = collectLeftSidebarItems();
+            const rightItems = collectRightSidebarItems();
+            if (!leftItems.length || !rightItems.length) return;
+
+            clearSidebarPairHeights(leftItems, rightItems);
+
+            if (window.innerWidth < 1280) return;
+
+            const pairCount = Math.min(leftItems.length, rightItems.length);
+            for (let index = 0; index < pairCount; index += 1) {
+                const leftItem = leftItems[index];
+                const rightItem = rightItems[index];
+                if (!(leftItem instanceof HTMLElement) || !(rightItem instanceof HTMLElement)) continue;
+
+                const pairHeight = Math.max(leftItem.offsetHeight, rightItem.offsetHeight);
+                leftItem.style.minHeight = `${pairHeight}px`;
+                rightItem.style.minHeight = `${pairHeight}px`;
+            }
+        }
+
+        let sidebarAlignTimer = 0;
+        function queueSidebarPairAlignment() {
+            window.clearTimeout(sidebarAlignTimer);
+            sidebarAlignTimer = window.setTimeout(syncSidebarPairAlignment, 50);
+        }
+
+        if (document.readyState === "loading") {
+            document.addEventListener("DOMContentLoaded", queueSidebarPairAlignment);
+        } else {
+            queueSidebarPairAlignment();
+        }
+
+        window.addEventListener("resize", queueSidebarPairAlignment);
+        document.addEventListener("swup:content:replace", queueSidebarPairAlignment);
+        document.addEventListener("swup:page:view", queueSidebarPairAlignment);
     })();
 </script>
 </Layout>
