@@ -154,15 +154,17 @@ const pageTitle =
 
 {pageType === "category" && (
 	<MainGridLayout title={pageTitle}>
-		<div class="prose dark:prose-invert max-w-none">
-			<h1>{category.categoryTitle}</h1>
-			<p>请选择想阅读的作品。</p>
+		<div class="prose dark:prose-invert max-w-none sakura-select sakura-select--novel">
+			<div class="sakura-select-hero not-prose mb-7">
+				<h1 class="sakura-select-title">{category.categoryTitle}</h1>
+				<p class="sakura-select-subtitle">请选择想阅读的作品。</p>
+			</div>
 
 			<div class="flex flex-col gap-4 mt-8">
 				{category.works.map((work) => (
 					<a
 						href={getWorkPath(work)}
-						class="block p-4 md:p-5 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-blue-500 dark:hover:border-blue-400 transition-colors"
+						class="sakura-select-card block p-4 md:p-5 rounded-lg border transition-colors"
 					>
 						<div class="flex flex-col md:flex-row gap-4 md:gap-5">
 							{work.coverEntry.data.cover && (
@@ -173,24 +175,24 @@ const pageTitle =
 								/>
 							)}
 							<div class="min-w-0 flex-1">
-								<h2 class="text-xl font-bold mb-2">{work.coverEntry.data.title}</h2>
+								<h2 class="sakura-select-card-title text-xl font-bold mb-2">{work.coverEntry.data.title}</h2>
 								{work.coverEntry.data.author && (
-									<p class="text-sm text-gray-600 dark:text-gray-400 mb-2">
+									<p class="sakura-select-meta text-sm mb-2">
 										作者: {work.coverEntry.data.author}
 									</p>
 								)}
 								{work.coverEntry.data.status && (
-									<p class="text-sm font-semibold text-blue-600 dark:text-blue-400 mb-2">
+									<p class="sakura-select-status text-sm font-semibold mb-2">
 										{work.coverEntry.data.status}
 									</p>
 								)}
-								<p class="text-gray-700 dark:text-gray-300 line-clamp-2">
+								<p class="sakura-select-desc line-clamp-2">
 									{work.coverEntry.data.description}
 								</p>
 								{work.coverEntry.data.tags && work.coverEntry.data.tags.length > 0 && (
 									<div class="mt-3 flex flex-wrap gap-2">
 										{work.coverEntry.data.tags.map((tag) => (
-											<span class="text-xs px-2 py-1 rounded bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300">
+											<span class="sakura-select-tag text-xs px-2 py-1 rounded">
 												{tag}
 											</span>
 										))}
@@ -216,7 +218,7 @@ const pageTitle =
 		title={pageTitle}
 		contentBackdrop={currentWork.coverEntry.data.cover || ""}
 	>
-		<div class="prose dark:prose-invert max-w-none reading-content novel-reading-theme">
+		<div class="prose dark:prose-invert max-w-none reading-content novel-reading-theme sakura-select sakura-select--novel">
 			<div class="mb-8 novel-meta-panel">
 				{!currentWork.isLegacy && (
 					<div class="mb-4">
@@ -233,14 +235,14 @@ const pageTitle =
 
 				<div class="flex flex-wrap gap-4 my-4 text-sm">
 					{currentWork.coverEntry.data.author && (
-						<p>
+						<p class="sakura-select-meta">
 							<strong>作者:</strong> {currentWork.coverEntry.data.author}
 						</p>
 					)}
 					{currentWork.coverEntry.data.status && (
-						<p>
+						<p class="sakura-select-status">
 							<strong>状态:</strong>
-							<span class="font-semibold text-blue-600 dark:text-blue-400">
+							<span class="font-semibold">
 								{currentWork.coverEntry.data.status}
 							</span>
 						</p>
@@ -250,7 +252,7 @@ const pageTitle =
 				{currentWork.coverEntry.data.tags && currentWork.coverEntry.data.tags.length > 0 && (
 					<div class="flex flex-wrap gap-2 mb-4">
 						{currentWork.coverEntry.data.tags.map((tag) => (
-							<span class="px-3 py-1 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 text-sm">
+							<span class="sakura-select-tag px-3 py-1 rounded-full text-sm">
 								{tag}
 							</span>
 						))}
@@ -270,22 +272,22 @@ const pageTitle =
 					currentWork.chapterEntries.map((chapter, index) => (
 						<a
 							href={getChapterPath(currentWork, chapter)}
-							class="reading-chapter-card group flex items-start gap-3 rounded-[var(--radius-large)] border bg-[var(--card-bg)] px-4 py-3 transition-colors duration-150"
+							class="sakura-select-card group flex items-start gap-3 rounded-[var(--radius-large)] border bg-[var(--card-bg)] px-4 py-3 transition-colors duration-150"
 						>
-							<span class="reading-chapter-badge inline-flex h-7 min-w-7 items-center justify-center rounded-full px-2 text-xs font-semibold">
+							<span class="sakura-select-badge inline-flex h-7 min-w-7 items-center justify-center rounded-full px-2 text-xs font-semibold">
 								{chapter.data.chapterNumber || index + 1}
 							</span>
 							<div class="min-w-0 flex-1">
-								<h3 class="reading-chapter-title !m-0 text-base font-semibold transition-colors">
+								<h3 class="sakura-select-card-title !m-0 text-base font-semibold transition-colors">
 									{chapter.data.title}
 								</h3>
 								{chapter.data.published && (
-									<p class="!mb-0 !mt-1 text-xs text-[var(--content-meta)]">
+									<p class="sakura-select-meta !mb-0 !mt-1 text-xs">
 										{new Date(chapter.data.published).toLocaleDateString("zh-CN")}
 									</p>
 								)}
 							</div>
-							<span class="reading-chapter-arrow text-sm text-[var(--content-meta)] transition-colors">→</span>
+							<span class="sakura-select-card-arrow text-sm transition-colors">→</span>
 						</a>
 					))
 				) : (

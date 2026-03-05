@@ -36,9 +36,11 @@ essays.sort((a, b) => {
 ---
 
 <MainGridLayout title="随笔">
-	<div class="prose dark:prose-invert max-w-none">
-		<h1>随笔</h1>
-		<p>欢迎来到随笔栏目。</p>
+	<div class="prose dark:prose-invert max-w-none sakura-select sakura-select--essay">
+		<div class="sakura-select-hero not-prose mb-7">
+			<h1 class="sakura-select-title">随笔</h1>
+			<p class="sakura-select-subtitle">欢迎来到随笔栏目。</p>
+		</div>
 
 		<div class="flex flex-col gap-4 mt-8">
 			{essays.map((essay) => {
@@ -50,7 +52,7 @@ essays.sort((a, b) => {
 				return (
 					<a
 						href={essayLink}
-						class="block p-4 md:p-5 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-blue-500 dark:hover:border-blue-400 transition-colors"
+						class="sakura-select-card block p-4 md:p-5 rounded-lg border transition-colors"
 					>
 						<div class="flex flex-col md:flex-row gap-4 md:gap-5">
 							{essayData.cover && (
@@ -61,24 +63,24 @@ essays.sort((a, b) => {
 								/>
 							)}
 							<div class="min-w-0 flex-1">
-								<h2 class="text-xl font-bold mb-2">{essayTitle}</h2>
+								<h2 class="sakura-select-card-title text-xl font-bold mb-2">{essayTitle}</h2>
 								{essayData.author && (
-									<p class="text-sm text-gray-600 dark:text-gray-400 mb-2">
+									<p class="sakura-select-meta text-sm mb-2">
 										作者: {essayData.author}
 									</p>
 								)}
 								{essayData.status && (
-									<p class="text-sm font-semibold text-blue-600 dark:text-blue-400 mb-2">
+									<p class="sakura-select-status text-sm font-semibold mb-2">
 										{essayData.status}
 									</p>
 								)}
-								<p class="text-gray-700 dark:text-gray-300 line-clamp-2">
+								<p class="sakura-select-desc line-clamp-2">
 									{essayData.description}
 								</p>
 								{essayData.tags && essayData.tags.length > 0 && (
 									<div class="mt-3 flex flex-wrap gap-2">
 										{essayData.tags.map((tag) => (
-											<span class="text-xs px-2 py-1 rounded bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300">
+											<span class="sakura-select-tag text-xs px-2 py-1 rounded">
 												{tag}
 											</span>
 										))}

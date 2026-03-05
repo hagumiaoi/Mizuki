@@ -336,6 +336,239 @@
   cursor: default;
 }
 
+.sky-hero {
+  --sky-accent: var(--primary);
+  --sky-accent-soft: color-mix(in oklch, var(--primary) 42%, var(--btn-content) 58%);
+  --sky-text: color-mix(in oklch, var(--btn-content) 84%, var(--deep-text) 16%);
+  position: relative;
+  padding: 1.35rem 1.45rem;
+  border: 1px solid color-mix(in oklch, var(--sky-accent) 26%, var(--line-color) 74%);
+  border-radius: var(--radius-large);
+  background:
+    radial-gradient(120% 86% at 50% -15%, color-mix(in oklch, var(--sky-accent) 24%, transparent 76%) 0%, transparent 66%),
+    radial-gradient(70% 44% at 16% 88%, color-mix(in oklch, var(--sky-accent-soft) 34%, transparent 66%) 0%, transparent 70%),
+    radial-gradient(74% 42% at 86% 92%, color-mix(in oklch, var(--sky-accent-soft) 28%, transparent 72%) 0%, transparent 72%),
+    linear-gradient(180deg, color-mix(in oklch, var(--card-bg) 86%, var(--sky-accent) 14%) 0%, color-mix(in oklch, var(--card-bg) 95%, var(--page-bg) 5%) 100%);
+  box-shadow: 0 0.9rem 2rem color-mix(in oklch, var(--sky-accent) 12%, transparent 88%);
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.sky-hero::before {
+  content: "";
+  position: absolute;
+  top: -2.3rem;
+  right: -1.45rem;
+  width: 6rem;
+  height: 6rem;
+  border-radius: 999px;
+  background: radial-gradient(circle, color-mix(in oklch, var(--sky-accent) 34%, var(--card-bg) 66%) 0%, color-mix(in oklch, var(--sky-accent) 12%, transparent 88%) 56%, transparent 74%);
+  opacity: 0.85;
+  pointer-events: none;
+}
+
+.sky-hero::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -0.55rem;
+  height: 42%;
+  background:
+    radial-gradient(35% 80% at 20% 100%, color-mix(in oklch, var(--card-bg) 92%, transparent 8%) 0%, transparent 75%),
+    radial-gradient(34% 76% at 48% 100%, color-mix(in oklch, var(--card-bg) 88%, transparent 12%) 0%, transparent 74%),
+    radial-gradient(33% 78% at 78% 100%, color-mix(in oklch, var(--card-bg) 90%, transparent 10%) 0%, transparent 76%);
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+.sky-hero .sky-hero-title {
+  margin: 0 !important;
+  position: relative;
+  z-index: 1;
+  color: var(--sky-text);
+  letter-spacing: 0.02em;
+  text-shadow: 0 0 0.42rem color-mix(in oklch, var(--sky-accent) 34%, transparent 66%);
+}
+
+.sky-hero .sky-hero-subtitle {
+  margin: 0.62rem 0 0 !important;
+  position: relative;
+  z-index: 1;
+  color: color-mix(in oklch, var(--content-meta) 84%, var(--btn-content) 16%);
+  font-size: 1rem;
+}
+
+.sky-hero--novel {
+  --sky-accent: color-mix(in oklch, var(--primary) 76%, var(--btn-content) 24%);
+  --sky-accent-soft: color-mix(in oklch, var(--primary) 52%, var(--btn-content) 48%);
+}
+
+.sky-hero--essay {
+  --sky-accent: color-mix(in oklch, var(--btn-content) 74%, var(--primary) 26%);
+  --sky-accent-soft: color-mix(in oklch, var(--btn-content) 56%, var(--link-hover) 44%);
+}
+
+.sky-hero--thought {
+  --sky-accent: color-mix(in oklch, var(--link-hover) 66%, var(--primary) 34%);
+  --sky-accent-soft: color-mix(in oklch, var(--primary) 62%, var(--btn-content) 38%);
+}
+
+:root:not(.dark) .sky-hero {
+  background:
+    radial-gradient(120% 86% at 50% -15%, color-mix(in oklch, var(--sky-accent) 13%, transparent 87%) 0%, transparent 66%),
+    radial-gradient(70% 44% at 16% 88%, color-mix(in oklch, var(--sky-accent-soft) 22%, transparent 78%) 0%, transparent 70%),
+    radial-gradient(74% 42% at 86% 92%, color-mix(in oklch, var(--sky-accent-soft) 18%, transparent 82%) 0%, transparent 72%),
+    linear-gradient(180deg, color-mix(in oklch, var(--card-bg) 95%, var(--sky-accent) 5%) 0%, color-mix(in oklch, var(--card-bg) 97%, var(--page-bg) 3%) 100%);
+}
+
+.sakura-select {
+  --sakura-accent: color-mix(in oklch, var(--primary) 64%, var(--btn-content) 36%);
+  --sakura-accent-soft: color-mix(in oklch, var(--btn-content) 58%, var(--primary) 42%);
+  --sakura-text: color-mix(in oklch, var(--btn-content) 84%, var(--deep-text) 16%);
+}
+
+.sakura-select--novel {
+  --sakura-accent: color-mix(in oklch, var(--primary) 74%, var(--btn-content) 26%);
+  --sakura-accent-soft: color-mix(in oklch, var(--primary) 48%, var(--btn-content) 52%);
+}
+
+.sakura-select--essay {
+  --sakura-accent: color-mix(in oklch, var(--btn-content) 72%, var(--primary) 28%);
+  --sakura-accent-soft: color-mix(in oklch, var(--btn-content) 50%, var(--link-hover) 50%);
+}
+
+.sakura-select--thought {
+  --sakura-accent: color-mix(in oklch, var(--link-hover) 64%, var(--primary) 36%);
+  --sakura-accent-soft: color-mix(in oklch, var(--primary) 62%, var(--btn-content) 38%);
+}
+
+.sakura-select-hero {
+  position: relative;
+  padding: 1.2rem 1.35rem;
+  border: 1px solid color-mix(in oklch, var(--sakura-accent) 30%, var(--line-color) 70%);
+  border-radius: var(--radius-large);
+  background:
+    radial-gradient(circle at 84% 18%, color-mix(in oklch, var(--sakura-accent) 18%, transparent 82%) 0%, transparent 44%),
+    radial-gradient(circle at 15% 84%, color-mix(in oklch, var(--sakura-accent-soft) 24%, transparent 76%) 0%, transparent 42%),
+    linear-gradient(136deg, color-mix(in oklch, var(--card-bg) 89%, var(--sakura-accent-soft) 11%) 0%, color-mix(in oklch, var(--card-bg) 96%, var(--page-bg) 4%) 100%);
+  box-shadow: 0 0.9rem 2.1rem color-mix(in oklch, var(--sakura-accent) 13%, transparent 87%);
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.sakura-select-hero::before,
+.sakura-select-hero::after {
+  position: absolute;
+  line-height: 1;
+  pointer-events: none;
+  color: color-mix(in oklch, var(--sakura-accent) 72%, var(--card-bg) 28%);
+  text-shadow: 0 0 0.6rem color-mix(in oklch, var(--sakura-accent) 40%, transparent 60%);
+}
+
+.sakura-select-hero::before {
+  content: "✿";
+  top: 0.55rem;
+  right: 0.9rem;
+  font-size: 0.82rem;
+  opacity: 0.9;
+}
+
+.sakura-select-hero::after {
+  content: "❀";
+  top: 1.25rem;
+  right: 1.75rem;
+  font-size: 0.58rem;
+  opacity: 0.72;
+}
+
+.sakura-select-title {
+  margin: 0 !important;
+  color: var(--sakura-text);
+  letter-spacing: 0.02em;
+  text-shadow:
+    0 0 0.42rem color-mix(in oklch, var(--sakura-accent) 34%, transparent 66%),
+    0 0 1rem color-mix(in oklch, var(--sakura-accent-soft) 24%, transparent 76%);
+}
+
+.sakura-select-subtitle {
+  margin: 0.6rem 0 0 !important;
+  color: color-mix(in oklch, var(--content-meta) 82%, var(--btn-content) 18%);
+}
+
+.sakura-select-card {
+  position: relative;
+  border-color: color-mix(in oklch, var(--sakura-accent) 26%, var(--line-color) 74%);
+  background:
+    radial-gradient(circle at 85% 18%, color-mix(in oklch, var(--sakura-accent) 10%, transparent 90%) 0%, transparent 44%),
+    linear-gradient(138deg, color-mix(in oklch, var(--card-bg) 90%, var(--sakura-accent-soft) 10%) 0%, color-mix(in oklch, var(--card-bg) 97%, var(--page-bg) 3%) 100%);
+  overflow: hidden;
+}
+
+.sakura-select-card::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 0;
+  height: 40%;
+  background:
+    radial-gradient(34% 78% at 18% 100%, color-mix(in oklch, var(--card-bg) 88%, transparent 12%) 0%, transparent 74%),
+    radial-gradient(36% 80% at 50% 100%, color-mix(in oklch, var(--card-bg) 84%, transparent 16%) 0%, transparent 74%),
+    radial-gradient(34% 76% at 82% 100%, color-mix(in oklch, var(--card-bg) 86%, transparent 14%) 0%, transparent 76%);
+  opacity: 0.65;
+  pointer-events: none;
+}
+
+.sakura-select-card:hover {
+  border-color: color-mix(in oklch, var(--sakura-accent) 44%, var(--line-color) 56%);
+  background:
+    radial-gradient(circle at 85% 18%, color-mix(in oklch, var(--sakura-accent) 15%, transparent 85%) 0%, transparent 44%),
+    linear-gradient(138deg, color-mix(in oklch, var(--card-bg) 87%, var(--sakura-accent-soft) 13%) 0%, color-mix(in oklch, var(--card-bg) 96%, var(--page-bg) 4%) 100%);
+}
+
+.sakura-select-card-title {
+  color: color-mix(in oklch, var(--btn-content) 84%, var(--deep-text) 16%);
+  transition: color 0.15s ease;
+}
+
+.sakura-select-card:hover .sakura-select-card-title,
+.sakura-select-card:hover .sakura-select-card-arrow {
+  color: color-mix(in oklch, var(--sakura-accent) 84%, var(--btn-content) 16%);
+}
+
+.sakura-select-meta {
+  color: color-mix(in oklch, var(--content-meta) 84%, var(--btn-content) 16%) !important;
+}
+
+.sakura-select-status {
+  color: color-mix(in oklch, var(--sakura-accent) 82%, var(--btn-content) 18%) !important;
+}
+
+.sakura-select-desc {
+  color: color-mix(in oklch, var(--content-meta) 72%, var(--btn-content) 28%) !important;
+}
+
+.sakura-select-tag {
+  border: 1px solid color-mix(in oklch, var(--sakura-accent) 24%, var(--line-color) 76%);
+  background: color-mix(in oklch, var(--btn-regular-bg) 80%, var(--sakura-accent-soft) 20%) !important;
+  color: color-mix(in oklch, var(--btn-content) 80%, var(--sakura-accent) 20%) !important;
+}
+
+.sakura-select-badge {
+  background: color-mix(in oklch, var(--btn-regular-bg) 76%, var(--sakura-accent) 24%);
+  color: color-mix(in oklch, var(--btn-content) 80%, var(--sakura-accent) 20%);
+}
+
+.sakura-select-card-arrow {
+  color: var(--content-meta);
+}
+
+:root:not(.dark) .sakura-select-hero {
+  background:
+    radial-gradient(circle at 84% 18%, color-mix(in oklch, var(--sakura-accent) 10%, transparent 90%) 0%, transparent 44%),
+    radial-gradient(circle at 15% 84%, color-mix(in oklch, var(--sakura-accent-soft) 14%, transparent 86%) 0%, transparent 42%),
+    linear-gradient(136deg, color-mix(in oklch, var(--card-bg) 96%, var(--sakura-accent-soft) 4%) 0%, color-mix(in oklch, var(--card-bg) 97%, var(--page-bg) 3%) 100%);
+}
+
 .reading-content {
   --reading-accent: var(--primary);
   --reading-accent-alt: color-mix(in oklch, var(--btn-content) 46%, var(--primary) 54%);

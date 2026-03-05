@@ -67,6 +67,41 @@
   background: var(--btn-regular-bg-active);
 }
 
+.mizuki-image-preview__nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.8rem;
+  height: 2.8rem;
+  border-radius: 999px;
+  border: 1px solid var(--line-color);
+  background: color-mix(in oklch, var(--btn-regular-bg) 88%, transparent 12%);
+  color: var(--btn-content);
+  font-size: 1.6rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.mizuki-image-preview__nav:hover {
+  background: var(--btn-regular-bg-hover);
+}
+
+.mizuki-image-preview__nav:active {
+  background: var(--btn-regular-bg-active);
+}
+
+.mizuki-image-preview__nav--prev {
+  left: 0.5rem;
+}
+
+.mizuki-image-preview__nav--next {
+  right: 0.5rem;
+}
+
 .mizuki-image-preview__image {
   max-width: 100%;
   max-height: calc(92vh - 5rem);
@@ -105,6 +140,20 @@ body.mizuki-image-preview-open {
   .mizuki-image-preview__close {
     top: 0.5rem;
     right: 0.5rem;
+  }
+
+  .mizuki-image-preview__nav {
+    width: 2.5rem;
+    height: 2.5rem;
+    font-size: 1.4rem;
+  }
+
+  .mizuki-image-preview__nav--prev {
+    left: 0.4rem;
+  }
+
+  .mizuki-image-preview__nav--next {
+    right: 0.4rem;
   }
 
   .mizuki-image-preview__image {

@@ -8,9 +8,11 @@ const categories = buildNovelCategories(allNovelEntries);
 ---
 
 <MainGridLayout title="小说">
-	<div class="prose dark:prose-invert max-w-none">
-		<h1>小说</h1>
-		<p>欢迎来到小说栏目，请先选择分类。</p>
+	<div class="prose dark:prose-invert max-w-none sakura-select sakura-select--novel">
+		<div class="sakura-select-hero not-prose mb-7">
+			<h1 class="sakura-select-title">小说</h1>
+			<p class="sakura-select-subtitle">欢迎来到小说栏目，请先选择分类。</p>
+		</div>
 
 		<div class="flex flex-col gap-4 mt-8">
 			{
@@ -27,7 +29,7 @@ const categories = buildNovelCategories(allNovelEntries);
 					return (
 						<a
 							href={categoryLink}
-							class="block p-4 md:p-5 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-blue-500 dark:hover:border-blue-400 transition-colors"
+							class="sakura-select-card block p-4 md:p-5 rounded-lg border transition-colors"
 						>
 							<div class="flex flex-col md:flex-row gap-4 md:gap-5">
 								{categoryCover && (
@@ -38,12 +40,12 @@ const categories = buildNovelCategories(allNovelEntries);
 									/>
 								)}
 								<div class="min-w-0 flex-1">
-									<h2 class="text-xl font-bold mb-2">{category.categoryTitle}</h2>
-									<p class="text-sm text-gray-600 dark:text-gray-400 mb-2">
+									<h2 class="sakura-select-card-title text-xl font-bold mb-2">{category.categoryTitle}</h2>
+									<p class="sakura-select-meta text-sm mb-2">
 										作品数: {category.works.length}
 									</p>
 									{workTitles.length > 0 && (
-										<p class="text-gray-700 dark:text-gray-300 line-clamp-2">
+										<p class="sakura-select-desc line-clamp-2">
 											包含：{workTitles.join("、")}
 										</p>
 									)}
