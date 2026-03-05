@@ -4,6 +4,7 @@ import { getCollection, render } from "astro:content";
 import MainGridLayout from "@layouts/MainGridLayout.astro";
 
 type ThoughtDisplayData = CollectionEntry<"thoughts">["data"] & {
+	cover?: string;
 	author?: string;
 	status?: string;
 	tags?: string[];
@@ -73,7 +74,7 @@ const thoughtTitle = entryData.title;
 ---
 
 <MainGridLayout title={thoughtTitle}>
-	<div class="prose dark:prose-invert max-w-none">
+	<div class="prose dark:prose-invert max-w-none reading-content">
 		<div class="mb-8">
 			<h1>{thoughtTitle}</h1>
 
@@ -110,7 +111,7 @@ const thoughtTitle = entryData.title;
 			}
 		</div>
 
-		<div class="my-8 p-4 bg-gray-50 dark:bg-gray-900 rounded-lg custom-md">
+		<div class="my-8 custom-md">
 			<Content />
 		</div>
 
@@ -118,10 +119,11 @@ const thoughtTitle = entryData.title;
 
 		<h2>章节列表</h2>
 
-		<div class="space-y-2">
+		<div class="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2">
 			{
 				chapterFiles.length > 0 ? (
-					chapterFiles.map((chapter) => {
+					chapterFiles.map((chapter, index) => {
+						const chapterData = chapter.data as ThoughtDisplayData;
 						const chapterParts = getIdParts(chapter.id);
 						const chapterFileName = chapterParts[chapterParts.length - 1]
 							.replace(/\.md$/, "")
@@ -130,19 +132,27 @@ const thoughtTitle = entryData.title;
 						return (
 							<a
 								href={`/thoughts/${thoughtDir}/${chapterFileName}/`}
-								class="block p-3 rounded border border-gray-200 dark:border-gray-700 hover:bg-blue-50 dark:hover:bg-blue-900/30 hover:border-blue-500 dark:hover:border-blue-400 transition-colors"
+								class="group flex items-start gap-3 rounded-[var(--radius-large)] border border-[var(--line-color)] bg-[var(--card-bg)] px-4 py-3 transition-colors duration-150 hover:border-[var(--primary)] hover:bg-[var(--btn-card-bg-hover)]"
 							>
-								<h3 class="font-semibold">{chapter.data.title}</h3>
-								{chapter.data.published && (
-									<p class="text-xs text-gray-500 dark:text-gray-400">
-										{new Date(chapter.data.published).toLocaleDateString("zh-CN")}
-									</p>
-								)}
+								<span class="inline-flex h-7 min-w-7 items-center justify-center rounded-full bg-[var(--btn-regular-bg)] px-2 text-xs font-semibold text-[var(--btn-content)]">
+									{chapterData.chapterNumber || index + 1}
+								</span>
+								<div class="min-w-0 flex-1">
+									<h3 class="!m-0 text-base font-semibold text-black/80 transition-colors group-hover:text-[var(--primary)] dark:text-white/85">
+										{chapter.data.title}
+									</h3>
+									{chapter.data.published && (
+										<p class="!mb-0 !mt-1 text-xs text-[var(--content-meta)]">
+											{new Date(chapter.data.published).toLocaleDateString("zh-CN")}
+										</p>
+									)}
+								</div>
+								<span class="text-sm text-[var(--content-meta)] transition-colors group-hover:text-[var(--primary)]">→</span>
 							</a>
 						);
 					})
 				) : (
-					<p class="text-gray-500 dark:text-gray-400">暂无章节</p>
+					<p class="text-[var(--content-meta)]">暂无章节</p>
 				)
 			}
 		</div>

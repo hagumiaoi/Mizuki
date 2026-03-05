@@ -38,6 +38,7 @@ interface Props {
 	setOGTypeArticle?: boolean;
 	postSlug?: string;
 	headings?: MarkdownHeading[];
+    contentBackdrop?: string;
 }
 
 // 类型守卫函数
@@ -105,6 +106,7 @@ const {
 	lang,
 	setOGTypeArticle,
 	postSlug,
+    contentBackdrop = "",
 	headings = [],
 } = Astro.props;
 const hasBannerCredit = siteConfig.banner.credit.enable;
@@ -241,6 +243,9 @@ const shouldEnableTransparency =
 const transparentClass = shouldEnableTransparency
 	? "wallpaper-transparent"
 	: "";
+
+const normalizedContentBackdrop =
+    typeof contentBackdrop === "string" ? contentBackdrop : "";
 ---
 
 <Layout title={title} banner={banner} description={description} lang={lang} setOGTypeArticle={setOGTypeArticle} postSlug={postSlug}>
@@ -790,9 +795,9 @@ const transparentClass = shouldEnableTransparency
 </div>
 
 <!-- Main content -->
-<div class={`absolute w-full z-30 pointer-events-none ${mobileNonHomeBannerClass ? 'mobile-main-no-banner' : ''} ${siteConfig.wallpaperMode.defaultMode === 'none' ? 'no-banner-layout' : ''} ${transparentClass}`} style={`top: ${finalMainPanelTop}`}>
+<div id="main-surface-layer" class={`absolute w-full z-30 pointer-events-none ${mobileNonHomeBannerClass ? 'mobile-main-no-banner' : ''} ${siteConfig.wallpaperMode.defaultMode === 'none' ? 'no-banner-layout' : ''} ${transparentClass}`} style={`top: ${finalMainPanelTop}`}>
     <!-- The pointer-events-none here prevent blocking the click event of the TOC -->
-    <div class="relative max-w-[var(--page-width)] mx-auto pointer-events-auto">
+    <div class="relative max-w-[var(--page-width)] mx-auto pointer-events-auto" style="z-index: 1;">
         <div id="main-grid" class={`transition duration-700 w-full left-0 right-0 grid ${gridCols} grid-rows-none md:grid-rows-[auto] mx-auto gap-4 px-2 md:px-4 ${!mobileShowSidebar || !hasMobileDrawerComponents ? 'mobile-no-sidebar' : ''} ${hasRightSidebarComponents ? 'mobile-both-sidebar' : ''}`}
              data-layout-mode={defaultPostListLayout}
         >
@@ -825,6 +830,11 @@ const transparentClass = shouldEnableTransparency
 
             <main id="swup-container" class={`${mainContentClass} transition-main`}>
                 <div id="content-wrapper" class="onload-animation transition-leaving">
+                    <div
+                        id="page-surface-config"
+                        data-main-backdrop={normalizedContentBackdrop}
+                        hidden
+                    ></div>
                     <!-- the overflow-hidden here prevent long text break the layout-->
                     <!-- make id different from windows.swup global property -->
                     <slot></slot>
@@ -864,9 +874,80 @@ const transparentClass = shouldEnableTransparency
 
 <!-- 保留此元素以确保Swup正常工作 -->
 {(!siteConfig.toc.enable || isFloatTOC) && <div id="toc-container" class="hidden"></div>}
+
+<script is:inline>
+    (function () {
+        const mainLayerSelector = "#main-surface-layer";
+        const configSelector = "#page-surface-config";
+
+        function applyMainSurfaceBackdrop() {
+            const mainLayer = document.querySelector(mainLayerSelector);
+            if (!mainLayer) return;
+
+            const configNode = document.querySelector(configSelector);
+            const backdrop =
+                configNode?.getAttribute("data-main-backdrop")?.trim() || "";
+
+            if (!backdrop) {
+                mainLayer.classList.remove("has-main-surface-backdrop");
+                mainLayer.style.removeProperty("--main-surface-backdrop");
+                window.__mizukiMainBackdrop = "";
+                document.dispatchEvent(
+                    new CustomEvent("mizuki:main-backdrop:update", {
+                        detail: { backdrop: "" },
+                    }),
+                );
+                return;
+            }
+
+            mainLayer.classList.add("has-main-surface-backdrop");
+            mainLayer.style.setProperty(
+                "--main-surface-backdrop",
+                `url(${JSON.stringify(backdrop)})`,
+            );
+
+            window.__mizukiMainBackdrop = backdrop;
+            document.dispatchEvent(
+                new CustomEvent("mizuki:main-backdrop:update", {
+                    detail: { backdrop },
+                }),
+            );
+        }
+
+        if (document.readyState === "loading") {
+            document.addEventListener(
+                "DOMContentLoaded",
+                applyMainSurfaceBackdrop,
+            );
+        } else {
+            applyMainSurfaceBackdrop();
+        }
+
+        document.addEventListener(
+            "swup:content:replace",
+            applyMainSurfaceBackdrop,
+        );
+        document.addEventListener("swup:page:view", applyMainSurfaceBackdrop);
+    })();
+</script>
 </Layout>
 
 <style>
+
+#main-surface-layer {
+    background-color: var(--page-bg);
+    background-image: none;
+    background-position: center top;
+    background-size: cover;
+    background-repeat: no-repeat;
+    transition: background-image 0.35s ease;
+}
+
+#main-surface-layer.has-main-surface-backdrop {
+    background-color: transparent;
+    background-image: var(--main-surface-backdrop);
+}
+
 /* Banner text styles */
 .banner-title {
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
@@ -916,7 +997,7 @@ body.wallpaper-transparent #toc-inner-wrapper:has(table-of-contents[data-loaded=
 /* 桌面端 banner 模式下的主内容区域位置 */
 @media (min-width: 1280px) {
     body.enable-banner .absolute.w-full.z-30 {
-        top: 35vh !important;
+        top: calc(35vh + var(--banner-height-extend)) !important;
     }
 }
 

@@ -1,38 +1,246 @@
 ---
-
-import I18nKey from "../../i18n/i18nKey";
-import { i18n } from "../../i18n/translation";
-import { getTagList } from "../../utils/content-utils";
-import { getTagUrl } from "../../utils/url-utils";
-import { widgetManager } from "../../utils/widget-manager";
-import ButtonTag from "../control/ButtonTag.astro";
 import WidgetLayout from "./WidgetLayout.astro";
 
-const tags = await getTagList();
-
-const COLLAPSED_HEIGHT = "7.5rem";
-
-// 使用统一的组件管理器检查是否应该折叠
-const tagsComponent = widgetManager
-	.getConfig()
-	.properties.find((p) => p.type === "tags");
-const isCollapsed = tagsComponent
-	? widgetManager.isCollapsed(tagsComponent, tags.length)
-	: false;
-
 interface Props {
-	class?: string;
-	style?: string;
+    class?: string;
+    style?: string;
 }
 const className = Astro.props.class;
 const style = Astro.props.style;
 ---
-<WidgetLayout name={i18n(I18nKey.tags)} id="tags" isCollapsed={isCollapsed} collapsedHeight={COLLAPSED_HEIGHT} class={className} style={style}>
-    <div class="flex gap-2 flex-wrap">
-        {tags.map(t => (
-            <ButtonTag href={getTagUrl(t.name)} label={`View all posts with the ${t.name.trim()} tag`}>
-                {t.name.trim()}
-            </ButtonTag>
-        ))}
+<WidgetLayout name="背景预览" id="background-preview" class={className} style={style}>
+    <div class="space-y-2" data-backdrop-preview-widget>
+        <button
+            type="button"
+            data-backdrop-preview-trigger
+            class="group w-full rounded-[var(--radius-large)] border border-[var(--line-color)] bg-[var(--card-bg)] p-2 text-left transition-colors duration-150 hover:border-[var(--primary)] hover:bg-[var(--btn-card-bg-hover)]"
+        >
+            <span
+                data-backdrop-preview-thumb
+                class="block h-24 w-full rounded-[calc(var(--radius-large)-0.35rem)] bg-[var(--btn-regular-bg)] bg-cover bg-center"
+            ></span>
+            <span class="mt-2 block text-sm font-semibold text-black/80 transition-colors group-hover:text-[var(--primary)] dark:text-white/85">
+                点击预览当前背景图
+            </span>
+        </button>
+        <p data-backdrop-preview-empty class="hidden text-xs text-[var(--content-meta)]">
+            当前页面暂无背景图
+        </p>
     </div>
 </WidgetLayout>
+
+<style is:global>
+    .mizuki-backdrop-preview-overlay {
+        position: fixed;
+        inset: 0;
+        z-index: 1400;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 1rem;
+        background: color-mix(in oklch, var(--deep-text) 78%, var(--page-bg) 22%);
+        cursor: zoom-out;
+    }
+
+    .mizuki-backdrop-preview-overlay.is-open {
+        display: flex;
+    }
+
+    .mizuki-backdrop-preview-image {
+        max-width: min(96vw, 1440px);
+        max-height: 94vh;
+        object-fit: contain;
+        border-radius: calc(var(--radius-large) - 0.35rem);
+        box-shadow: 0 0 0 1px var(--line-color);
+    }
+
+    [data-backdrop-preview-trigger].is-disabled {
+        opacity: 0.55;
+        cursor: not-allowed;
+    }
+
+    [data-backdrop-preview-trigger].is-disabled [data-backdrop-preview-thumb] {
+        filter: grayscale(1);
+    }
+</style>
+
+<script>
+    (function () {
+        type PreviewWindow = Window & {
+            __mizukiMainBackdrop?: string;
+            __mizukiBackdropPreviewBound?: boolean;
+        };
+
+        const previewWindow = window as PreviewWindow;
+        const WIDGET_SELECTOR = "[data-backdrop-preview-widget]";
+        const TRIGGER_SELECTOR = "[data-backdrop-preview-trigger]";
+        const THUMB_SELECTOR = "[data-backdrop-preview-thumb]";
+        const EMPTY_SELECTOR = "[data-backdrop-preview-empty]";
+        const OVERLAY_ID = "mizuki-backdrop-preview-overlay";
+
+        function extractUrlValue(value: string) {
+            const match = value.match(/url\((['"]?)(.*?)\1\)/i);
+            return match?.[2]?.trim() || "";
+        }
+
+        function getCurrentBackdrop() {
+            const configNode = document.querySelector("#page-surface-config");
+            const configured =
+                configNode?.getAttribute("data-main-backdrop")?.trim() || "";
+            if (configured) return configured;
+
+            if (
+                typeof previewWindow.__mizukiMainBackdrop === "string" &&
+                previewWindow.__mizukiMainBackdrop.trim()
+            ) {
+                return previewWindow.__mizukiMainBackdrop.trim();
+            }
+
+            const mainLayer = document.getElementById("main-surface-layer");
+            if (mainLayer instanceof HTMLElement) {
+                const backdropVar = mainLayer.style.getPropertyValue(
+                    "--main-surface-backdrop",
+                );
+                const backdropFromVar = extractUrlValue(backdropVar);
+                if (backdropFromVar) return backdropFromVar;
+
+                const computedBackground = getComputedStyle(
+                    mainLayer,
+                ).getPropertyValue("background-image");
+                const backdropFromComputed = extractUrlValue(
+                    computedBackground,
+                );
+                if (backdropFromComputed) return backdropFromComputed;
+            }
+
+            return "";
+        }
+
+        function ensureOverlay(): HTMLDivElement {
+            let overlay = document.getElementById(OVERLAY_ID);
+            if (overlay instanceof HTMLDivElement) return overlay;
+
+            overlay = document.createElement("div");
+            overlay.id = OVERLAY_ID;
+            overlay.className = "mizuki-backdrop-preview-overlay";
+            overlay.innerHTML = '<img class="mizuki-backdrop-preview-image" alt="背景预览" />';
+
+            overlay.addEventListener("click", () => {
+                closeOverlay();
+            });
+
+            document.body.appendChild(overlay);
+            return overlay as HTMLDivElement;
+        }
+
+        function closeOverlay() {
+            const overlay = document.getElementById(OVERLAY_ID);
+            if (!(overlay instanceof HTMLDivElement)) return;
+
+            overlay.classList.remove("is-open");
+            const image = overlay.querySelector(
+                ".mizuki-backdrop-preview-image",
+            ) as HTMLImageElement | null;
+            image?.removeAttribute("src");
+
+            document.documentElement.classList.remove(
+                "mizuki-backdrop-preview-open",
+            );
+            document.body.classList.remove("mizuki-backdrop-preview-open");
+        }
+
+        function openOverlay(backdrop: string) {
+            if (!backdrop) return;
+
+            const overlay = ensureOverlay();
+            const image = overlay.querySelector(
+                ".mizuki-backdrop-preview-image",
+            ) as HTMLImageElement | null;
+            if (!image) return;
+
+            image.setAttribute("src", backdrop);
+            overlay.classList.add("is-open");
+            document.documentElement.classList.add("mizuki-backdrop-preview-open");
+            document.body.classList.add("mizuki-backdrop-preview-open");
+        }
+
+        function refreshWidgets() {
+            const backdrop = getCurrentBackdrop();
+            const widgets = document.querySelectorAll(WIDGET_SELECTOR);
+            widgets.forEach((widget) => {
+                const trigger = widget.querySelector(
+                    TRIGGER_SELECTOR,
+                ) as HTMLButtonElement | null;
+                const thumb = widget.querySelector(
+                    THUMB_SELECTOR,
+                ) as HTMLElement | null;
+                const empty = widget.querySelector(
+                    EMPTY_SELECTOR,
+                ) as HTMLElement | null;
+
+                if (!trigger || !thumb) return;
+
+                trigger.dataset.backdrop = backdrop;
+
+                if (backdrop) {
+                    thumb.style.backgroundImage = `url(${JSON.stringify(backdrop)})`;
+                    trigger.classList.remove("is-disabled");
+                    trigger.removeAttribute("disabled");
+                    empty?.classList.add("hidden");
+                } else {
+                    thumb.style.backgroundImage = "none";
+                    trigger.classList.add("is-disabled");
+                    trigger.setAttribute("disabled", "true");
+                    empty?.classList.remove("hidden");
+                }
+            });
+        }
+
+        if (!previewWindow.__mizukiBackdropPreviewBound) {
+            document.addEventListener("click", (event) => {
+                const target = event.target;
+                if (!(target instanceof Element)) return;
+
+                const trigger = target.closest(
+                    TRIGGER_SELECTOR,
+                ) as HTMLButtonElement | null;
+                if (!trigger) return;
+
+                const currentBackdrop =
+                    (trigger.dataset.backdrop || "").trim() ||
+                    getCurrentBackdrop();
+
+                if (!currentBackdrop) {
+                    event.preventDefault();
+                    return;
+                }
+
+                event.preventDefault();
+                trigger.dataset.backdrop = currentBackdrop;
+                trigger.classList.remove("is-disabled");
+                trigger.removeAttribute("disabled");
+                openOverlay(currentBackdrop);
+            });
+
+            document.addEventListener("keydown", (event) => {
+                if (event.key === "Escape" || event.code === "Escape") {
+                    closeOverlay();
+                }
+            });
+
+            document.addEventListener("swup:content:replace", closeOverlay);
+            document.addEventListener("swup:page:view", closeOverlay);
+            document.addEventListener("swup:content:replace", refreshWidgets);
+            document.addEventListener("swup:page:view", refreshWidgets);
+            document.addEventListener("mizuki:main-backdrop:update", refreshWidgets);
+
+            previewWindow.__mizukiBackdropPreviewBound = true;
+        }
+
+        if (document.readyState === "loading") {
+            document.addEventListener("DOMContentLoaded", refreshWidgets);
+        } else {
+            refreshWidgets();
+        }
+    })();
+</script>

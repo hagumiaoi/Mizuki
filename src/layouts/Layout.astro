@@ -25,7 +25,8 @@ import type { Favicon } from "../types/config";
 import { pathsEqual, url } from "../utils/url-utils";
 import "../styles/mobile-navbar.css";
 import "../styles/wallpaper-navbar-transparent.css";
-import "../styles/fancybox-custom.css";
+import "../styles/markdown.css";
+import "../styles/image-preview.css";
 import "../styles/expressive-code.css";
 import "../styles/panel-animations.css";
 
@@ -170,7 +171,6 @@ if (siteConfig.font) {
 <html
 	lang={siteLang}
 	class="bg-[var(--page-bg)] text-[14px] md:text-[16px]"
-	data-overlayscrollbars-initialize
 >
 	<head>
 		<!-- 第三方分析脚本 - 延迟加载优化 -->
@@ -384,10 +384,9 @@ if (siteConfig.font) {
 	<body
 		class="min-h-screen"
 		class:list={[
-			{ "lg:is-home": isHomePage, "enable-banner": enableBanner },
+			{ "is-home": isHomePage, "enable-banner": enableBanner },
 		]}
 		style={bodyFontFamily ? `font-family: ${bodyFontFamily};` : ""}
-		data-overlayscrollbars-initialize
 	>
 		<noscript
 			><iframe
@@ -436,13 +435,13 @@ if (siteConfig.font) {
 			@apply h-[var(--banner-height-home)] translate-y-[var(--bannerOffset)];
 		}
 		.enable-banner.is-home #main-grid {
-			@apply translate-y-[var(--banner-height-extend)];
+			@apply translate-y-0;
 		}
 		.enable-banner #top-row {
 			@apply h-[calc(var(--banner-height-home)_-_4.5rem)] transition-all duration-300;
 		}
 		.enable-banner.is-home #sidebar-sticky {
-			@apply top-[calc(1rem_-_var(--banner-height-extend))];
+			@apply top-4;
 		}
 		.navbar-hidden {
 			@apply opacity-0 -translate-y-16;
@@ -849,47 +848,14 @@ function disableAnimation() {
 		setupSakura();
 	}
 
-	let fancyboxSelectors: string[] = [];
-	let Fancybox: any;
+	let imagePreviewModal: HTMLDivElement | null = null;
+	let imagePreviewImage: HTMLImageElement | null = null;
+	let imagePreviewCaption: HTMLElement | null = null;
+	let imagePreviewCloseBtn: HTMLButtonElement | null = null;
+	let imagePreviewPreviouslyFocused: HTMLElement | null = null;
 
-	function ensureFancyboxEscListener() {
-		if ((window as any).__fancyboxEscListenerBound) return;
-
-		document.addEventListener("keydown", (event) => {
-			const isEscape =
-				event.key === "Escape" ||
-				event.key === "Esc" ||
-				event.code === "Escape";
-			if (!isEscape) return;
-			if (!Fancybox) return;
-
-			const instance = Fancybox.getInstance?.();
-			if (instance) {
-				event.preventDefault();
-				event.stopPropagation();
-				instance.close();
-				return;
-			}
-
-			if (typeof Fancybox.close === "function") {
-				event.preventDefault();
-				event.stopPropagation();
-				Fancybox.close(false);
-				return;
-			}
-
-			const closeButton = document.querySelector(
-				".fancybox__container.is-open .f-button.is-close-button, .fancybox__container.is-open .fancybox__button--close",
-			) as HTMLElement | null;
-			if (closeButton) {
-				event.preventDefault();
-				event.stopPropagation();
-				closeButton.click();
-			}
-		}, true);
-
-		(window as any).__fancyboxEscListenerBound = true;
-	}
+	const IMAGE_PREVIEW_TARGET_SELECTOR =
+		".custom-md img, #post-cover img, .moment-images img, [data-image-preview] img";
 
 	// 数学公式按需加载
 	function checkKatex() {
@@ -901,168 +867,192 @@ function disableAnimation() {
 	function isImageLink(value: string) {
 		if (!value) return false;
 		if (/^data:image\//i.test(value)) return true;
-		return /\.(avif|bmp|gif|jpe?g|jfif|pjpeg|pjp|png|svg|webp)(\?.*)?(#.*)?$/i.test(value);
+		return /\.(avif|bmp|gif|jpe?g|jfif|pjpeg|pjp|png|svg|webp)(\?.*)?(#.*)?$/i.test(
+			value,
+		);
 	}
 
-	function ensureFancyboxTargets() {
-		const imageNodes = document.querySelectorAll(
-			".custom-md img, #post-cover img, .moment-images img",
+	function getImagePreviewSource(image: HTMLImageElement): string {
+		const parentAnchor = image.closest("a") as HTMLAnchorElement | null;
+		const href = parentAnchor?.getAttribute("href") || "";
+		if (href && isImageLink(href)) {
+			return href;
+		}
+
+		return image.currentSrc || image.getAttribute("src") || "";
+	}
+
+	function getImagePreviewCaption(image: HTMLImageElement): string {
+		const parentAnchor = image.closest("a") as HTMLAnchorElement | null;
+		const anchorCaption =
+			parentAnchor?.getAttribute("data-caption")?.trim() || "";
+		if (anchorCaption) return anchorCaption;
+
+		return image.getAttribute("alt")?.trim() || "";
+	}
+
+	function isModifiedEvent(event: MouseEvent) {
+		return (
+			event.metaKey ||
+			event.ctrlKey ||
+			event.shiftKey ||
+			event.altKey
+		);
+	}
+
+	function ensureImagePreviewElements() {
+		if (imagePreviewModal) return;
+
+		const modal = document.createElement("div");
+		modal.className = "mizuki-image-preview";
+		modal.setAttribute("aria-hidden", "true");
+		modal.innerHTML = `
+			<div class="mizuki-image-preview__backdrop" data-image-preview-close="true"></div>
+			<figure class="mizuki-image-preview__panel" role="dialog" aria-modal="true" aria-label="图片预览">
+				<button type="button" class="mizuki-image-preview__close" data-image-preview-close="true" aria-label="关闭图片预览">×</button>
+				<img class="mizuki-image-preview__image" alt="" />
+				<figcaption class="mizuki-image-preview__caption"></figcaption>
+			</figure>
+		`;
+
+		modal.addEventListener("click", (event) => {
+			const target = event.target as HTMLElement | null;
+			if (!target) return;
+			if (target.closest('[data-image-preview-close="true"]')) {
+				closeImagePreview();
+			}
+		});
+
+		document.body.appendChild(modal);
+
+		imagePreviewModal = modal;
+		imagePreviewImage = modal.querySelector(
+			".mizuki-image-preview__image",
+		) as HTMLImageElement;
+		imagePreviewCaption = modal.querySelector(
+			".mizuki-image-preview__caption",
+		) as HTMLElement;
+		imagePreviewCloseBtn = modal.querySelector(
+			".mizuki-image-preview__close",
+		) as HTMLButtonElement;
+	}
+
+	function openImagePreview(source: string, caption: string) {
+		if (!source) return;
+		ensureImagePreviewElements();
+
+		if (!imagePreviewModal || !imagePreviewImage || !imagePreviewCaption)
+			return;
+
+		imagePreviewPreviouslyFocused = document.activeElement as HTMLElement;
+		imagePreviewImage.setAttribute("src", source);
+		imagePreviewImage.setAttribute("alt", caption || "预览图像");
+
+		imagePreviewCaption.textContent = caption;
+		imagePreviewCaption.classList.toggle(
+			"is-empty",
+			caption.length === 0,
 		);
 
+		imagePreviewModal.classList.add("is-open");
+		imagePreviewModal.setAttribute("aria-hidden", "false");
+		document.documentElement.classList.add("mizuki-image-preview-open");
+		document.body.classList.add("mizuki-image-preview-open");
+
+		if (imagePreviewCloseBtn) {
+			imagePreviewCloseBtn.focus({ preventScroll: true });
+		}
+	}
+
+	function closeImagePreview() {
+		if (!imagePreviewModal || !imagePreviewModal.classList.contains("is-open"))
+			return;
+
+		imagePreviewModal.classList.remove("is-open");
+		imagePreviewModal.setAttribute("aria-hidden", "true");
+		document.documentElement.classList.remove("mizuki-image-preview-open");
+		document.body.classList.remove("mizuki-image-preview-open");
+
+		window.setTimeout(() => {
+			if (
+				imagePreviewModal &&
+				!imagePreviewModal.classList.contains("is-open") &&
+				imagePreviewImage
+			) {
+				imagePreviewImage.removeAttribute("src");
+			}
+		}, 150);
+
+		if (imagePreviewPreviouslyFocused?.focus) {
+			imagePreviewPreviouslyFocused.focus({ preventScroll: true });
+		}
+	}
+
+	function refreshImagePreviewTargets(root: ParentNode = document) {
+		const imageNodes = root.querySelectorAll(IMAGE_PREVIEW_TARGET_SELECTOR);
 		imageNodes.forEach((node) => {
-			const img = node as HTMLImageElement;
-			const source = img.currentSrc || img.getAttribute("src") || "";
-			if (!source) return;
-
-			const group = img.closest(".moment-images")
-				? "moment-gallery"
-				: img.closest("#post-cover")
-					? "post-cover-gallery"
-					: "content-gallery";
-
-			const existingFancyboxAnchor = img.closest("a[data-fancybox]") as HTMLAnchorElement | null;
-			if (existingFancyboxAnchor) {
-				if (!existingFancyboxAnchor.getAttribute("href")) {
-					existingFancyboxAnchor.setAttribute("href", source);
-				}
-				if (!existingFancyboxAnchor.getAttribute("data-caption") && img.alt) {
-					existingFancyboxAnchor.setAttribute("data-caption", img.alt);
-				}
-				return;
-			}
-
-			const parentAnchor = img.closest("a") as HTMLAnchorElement | null;
-			if (parentAnchor) {
-				const href = parentAnchor.getAttribute("href") || "";
-				if (href && !isImageLink(href)) {
-					return;
-				}
-
-				if (!href) {
-					parentAnchor.setAttribute("href", source);
-				}
-
-				parentAnchor.setAttribute("data-fancybox", group);
-				if (!parentAnchor.getAttribute("data-caption") && img.alt) {
-					parentAnchor.setAttribute("data-caption", img.alt);
-				}
-				return;
-			}
-
-			const wrapper = document.createElement("a");
-			wrapper.setAttribute("href", source);
-			wrapper.setAttribute("data-fancybox", group);
-			if (img.alt) {
-				wrapper.setAttribute("data-caption", img.alt);
-			}
-
-			img.parentNode?.insertBefore(wrapper, img);
-			wrapper.appendChild(img);
-		});
-
-		const fancyboxAnchors = document.querySelectorAll("a[data-fancybox]");
-		fancyboxAnchors.forEach((anchorNode) => {
-			const anchor = anchorNode as HTMLAnchorElement;
-			if (!anchor.getAttribute("href")) {
-				const dataSrc = anchor.getAttribute("data-src") || "";
-				if (dataSrc) {
-					anchor.setAttribute("href", dataSrc);
-				}
-			}
+			if (!(node instanceof HTMLImageElement)) return;
+			if (node.dataset.disableImagePreview === "true") return;
+			node.classList.add("mizuki-image-preview-target");
 		});
 	}
 
-	// 图片灯箱按需加载
-	async function initFancybox() {
-		ensureFancyboxTargets();
-		const fancyboxAnchorSelector = "a[data-fancybox]";
+	function handleImagePreviewClick(event: MouseEvent) {
+		if (event.defaultPrevented) return;
+		if (event.button !== 0) return;
+		if (isModifiedEvent(event)) return;
 
-		const hasImages = document.querySelector(fancyboxAnchorSelector);
+		const target = event.target;
+		if (!(target instanceof Element)) return;
 
-		if (!hasImages) return;
+		const clickedImage = target.closest("img") as HTMLImageElement | null;
+		if (!clickedImage) return;
+		if (!clickedImage.matches(IMAGE_PREVIEW_TARGET_SELECTOR)) return;
+		if (clickedImage.dataset.disableImagePreview === "true") return;
 
-		if (!Fancybox) {
-			const mod = await import("@fancyapps/ui");
-			Fancybox = mod.Fancybox;
-			await import("@fancyapps/ui/dist/fancybox/fancybox.css");
+		const parentAnchor = clickedImage.closest("a") as HTMLAnchorElement | null;
+		if (parentAnchor) {
+			const href = parentAnchor.getAttribute("href") || "";
+			const forcePreview = parentAnchor.hasAttribute("data-image-preview");
+			if (href && !isImageLink(href) && !forcePreview) {
+				return;
+			}
 		}
 
-		ensureFancyboxEscListener();
+		const source = getImagePreviewSource(clickedImage);
+		if (!source) return;
 
-		if (fancyboxSelectors.length > 0) {
-			return; // 已经初始化，直接返回
+		event.preventDefault();
+		event.stopPropagation();
+		openImagePreview(source, getImagePreviewCaption(clickedImage));
+	}
+
+	function handleImagePreviewKeydown(event: KeyboardEvent) {
+		const isEscapeKey =
+			event.key === "Escape" ||
+			event.key === "Esc" ||
+			event.code === "Escape";
+		if (!isEscapeKey) return;
+		if (!imagePreviewModal?.classList.contains("is-open")) return;
+
+		event.preventDefault();
+		event.stopPropagation();
+		closeImagePreview();
+	}
+
+	function initImagePreview() {
+		refreshImagePreviewTargets();
+
+		if (!(window as any).__mizukiImagePreviewBound) {
+			document.addEventListener("click", handleImagePreviewClick, true);
+			document.addEventListener("keydown", handleImagePreviewKeydown, true);
+			(window as any).__mizukiImagePreviewBound = true;
 		}
 
-		const commonConfig = {
-			Thumbs: { autoStart: true, showOnStart: "yes" },
-			Toolbar: {
-				display: {
-					left: ["infobar"],
-					middle: [
-						"zoomIn",
-						"zoomOut",
-						"toggle1to1",
-						"rotateCCW",
-						"rotateCW",
-						"flipX",
-						"flipY",
-					],
-					right: ["slideshow", "thumbs", "close"],
-				},
-			},
-			idle: false,
-			closeButton: true,
-			animated: true,
-			dragToClose: false,
-			contentClick: "toggleZoom",
-			dblClick: "toggleZoom",
-			keyboard: {
-				Escape: "close",
-				Delete: "close",
-				Backspace: "close",
-				PageUp: "next",
-				PageDown: "prev",
-				ArrowUp: "next",
-				ArrowDown: "prev",
-				ArrowRight: "next",
-				ArrowLeft: "prev",
-			},
-			fitToView: true,
-			preload: 3,
-			infinite: true,
-			Panzoom: {
-				maxScale: 4,
-				minScale: 1,
-				lockAxis: false,
-			},
-			Images: {
-				Panzoom: {
-					maxScale: 4,
-					minScale: 1,
-					lockAxis: false,
-				},
-			},
-			caption: false,
+		(window as any).__mizukiImagePreview = {
+			refresh: refreshImagePreviewTargets,
+			close: closeImagePreview,
 		};
-
-		Fancybox.bind(fancyboxAnchorSelector, {
-			...commonConfig,
-			groupAll: false,
-			Carousel: {
-				transition: "slide",
-				preload: 2,
-			},
-		});
-		fancyboxSelectors.push(fancyboxAnchorSelector);
-	}
-
-	// 清理 Fancybox 实例
-	function cleanupFancybox() {
-		if (!Fancybox) return; // 如果从未加载过，无需清理
-		fancyboxSelectors.forEach((selector) => {
-			Fancybox.unbind(selector);
-		});
-		fancyboxSelectors = [];
 	}
 
 	const setup = () => {
@@ -1088,7 +1078,7 @@ function disableAnimation() {
 			// 简化navbar处理逻辑
 			if (bannerEnabled) {
 				const navbar = document.getElementById("navbar-wrapper");
-				if (navbar && document.body.classList.contains("lg:is-home")) {
+				if (navbar && document.body.classList.contains("is-home")) {
 					const threshold =
 						window.innerHeight * (BANNER_HEIGHT / 100) - 88;
 					if (document.documentElement.scrollTop >= threshold) {
@@ -1100,7 +1090,7 @@ function disableAnimation() {
 
 		window.swup.hooks.on("content:replace", () => {
 			// 初始化新页面的图片、公式、滚动条和TOC
-			initFancybox();
+			initImagePreview();
 			checkKatex();
 			initCustomScrollbar();
 
@@ -1149,16 +1139,17 @@ function disableAnimation() {
 		window.swup.hooks.on(
 			"visit:start",
 			(visit: { to: { url: string } }) => {
-				// 清理上一页的 Fancybox
-				cleanupFancybox();
+				closeImagePreview();
 
 				// 处理 Banner class 和显示状态
 				const bodyElement = document.querySelector("body");
 				const isHomePage = pathsEqual(visit.to.url, url("/"));
 				if (bodyElement) {
 					if (isHomePage) {
-						bodyElement.classList.add("lg:is-home");
+						bodyElement.classList.add("is-home");
+						bodyElement.classList.remove("lg:is-home");
 					} else {
+						bodyElement.classList.remove("is-home");
 						bodyElement.classList.remove("lg:is-home");
 					}
 				}
@@ -1325,7 +1316,7 @@ function disableAnimation() {
 	};
 
 	if (window?.swup?.hooks) {
-		initFancybox();
+		initImagePreview();
 		checkKatex();
 		setup();
 	} else {
@@ -1333,11 +1324,11 @@ function disableAnimation() {
 		// 监听 DOM 加载 (确保首屏也能加载优化组件)
 		if (document.readyState === "loading") {
 			document.addEventListener("DOMContentLoaded", () => {
-				initFancybox();
+				initImagePreview();
 				checkKatex();
 			});
 		} else {
-			initFancybox();
+			initImagePreview();
 			checkKatex();
 		}
 	}
@@ -1405,7 +1396,7 @@ function disableAnimation() {
 
 			if (bannerEnabled && navbar) {
 				const isHome =
-					document.body.classList.contains("lg:is-home") &&
+					document.body.classList.contains("is-home") &&
 					window.innerWidth >= 1024;
 				const currentBannerHeight = isHome
 					? BANNER_HEIGHT_HOME

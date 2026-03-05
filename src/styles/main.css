@@ -33,6 +33,29 @@
 /* 确保平滑滚动 */
 html {
   scroll-behavior: smooth;
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-bg) transparent;
+}
+
+html::-webkit-scrollbar {
+  width: 10px;
+}
+
+html::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+html::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-bg);
+  border-radius: 999px;
+}
+
+html::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-bg-hover);
+}
+
+html::-webkit-scrollbar-thumb:active {
+  background: var(--scrollbar-bg-active);
 }
 
 /* 页面顶部渐变高光效果 */

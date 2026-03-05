@@ -196,14 +196,41 @@
 :root:not(.dark) .custom-md spoiler {
   --_spoiler-mask: color-mix(in oklch, var(--primary) 55%, white 45%);
 }
-/* 自定义小说段落间距 */
-.markdown-body p {
-  margin-top: 1.2rem; /* 段落上方的间距 */
-  margin-bottom: 1.2rem; /* 段落下方的间距 */
-  line-height: 1.8; /* 让行与行之间也更松散一点，阅读更舒服 */
+
+.reading-content .custom-md {
+  padding: 1.25rem;
+  border: 1px solid var(--line-color);
+  border-radius: var(--radius-large);
+  background: color-mix(in oklch, var(--card-bg) 92%, var(--page-bg) 8%);
 }
 
-/* 如果你希望对话之间的间距稍微小一点，可以只针对普通段落 */
-.markdown-body p {
-  letter-spacing: 0.02em; /* 稍微增加一点字间距，更有质感 */
+.reading-content .custom-md > :first-child {
+  margin-top: 0;
+}
+
+.reading-content .custom-md > :last-child {
+  margin-bottom: 0;
+}
+
+.reading-content .custom-md p {
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+  line-height: 1.95;
+  letter-spacing: 0.01em;
+  word-break: break-word;
+}
+
+.reading-content .custom-md :is(h1, h2, h3, h4) {
+  margin-top: 1.8rem;
+  line-height: 1.35;
+}
+
+@media (max-width: 768px) {
+  .reading-content .custom-md {
+    padding: 1rem;
+  }
+
+  .reading-content .custom-md p {
+    line-height: 1.8;
+  }
 }
