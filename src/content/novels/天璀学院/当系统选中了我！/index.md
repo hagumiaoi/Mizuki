@@ -1,7 +1,7 @@
 ---
 title: 当系统选中了我！
 description: 天璀学院的开端记录
-author: moi
+author: Gemini-3.1 pro，moi
 status: 连载中
 tags: [校园, 奇幻]
 cover: /images/mazhe.png
