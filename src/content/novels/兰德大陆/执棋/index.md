@@ -4,7 +4,7 @@ description: 异世界小说
 author: moi
 status: 连载中
 tags: [奇幻, 文学小说]
-cover: /images/novel-cover.png
+cover: /images/mazhe.png
 published: 2026-02-07
 draft: false
 ---

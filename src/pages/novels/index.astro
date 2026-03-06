@@ -7,7 +7,10 @@ const allNovelEntries = await getCollection("novels");
 const categories = buildNovelCategories(allNovelEntries);
 ---
 
-<MainGridLayout title="小说">
+<MainGridLayout
+	title="小说"
+	contentBackdrop="/images/section-backdrop/novels-bg.png"
+>
 	<div class="prose dark:prose-invert max-w-none sakura-select sakura-select--novel">
 		<div class="sakura-select-hero not-prose mb-7">
 			<h1 class="sakura-select-title">小说</h1>
@@ -18,9 +21,6 @@ const categories = buildNovelCategories(allNovelEntries);
 			{
 				categories.map((category) => {
 					const categoryLink = `/novels/${category.categorySlug}/`;
-					const categoryCover = category.works.find((work) => {
-						return Boolean(work.coverEntry.data.cover);
-					})?.coverEntry.data.cover;
 					const workTitles = category.works
 						.slice(0, 3)
 						.map((work) => work.coverEntry.data.title)
@@ -32,9 +32,9 @@ const categories = buildNovelCategories(allNovelEntries);
 							class="sakura-select-card block p-4 md:p-5 rounded-lg border transition-colors"
 						>
 							<div class="flex flex-col md:flex-row gap-4 md:gap-5">
-								{categoryCover && (
+								{category.cover && (
 									<img
-										src={categoryCover}
+										src={category.cover}
 										alt={category.categoryTitle}
 										class="w-full md:w-52 h-40 md:h-36 object-cover rounded-md shrink-0"
 									/>

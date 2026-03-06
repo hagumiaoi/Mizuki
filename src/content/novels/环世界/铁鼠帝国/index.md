@@ -8,7 +8,7 @@ status: "连载中"
 tags:
   - "奇幻"
   - "占位"
-cover: "/images/placeholder-cover.jpg"
+cover: "/images/mazhe.png"
 ---
 
 欢迎阅读《占位：我的小说》。

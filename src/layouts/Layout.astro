@@ -860,6 +860,7 @@ function disableAnimation() {
 	}
 
 	let imagePreviewModal: HTMLDivElement | null = null;
+	let imagePreviewScroll: HTMLDivElement | null = null;
 	let imagePreviewImage: HTMLImageElement | null = null;
 	let imagePreviewCaption: HTMLElement | null = null;
 	let imagePreviewCloseBtn: HTMLButtonElement | null = null;
@@ -1001,8 +1002,10 @@ function disableAnimation() {
 				<button type="button" class="mizuki-image-preview__nav mizuki-image-preview__nav--prev" data-image-preview-nav="-1" aria-label="上一张">‹</button>
 				<button type="button" class="mizuki-image-preview__nav mizuki-image-preview__nav--next" data-image-preview-nav="1" aria-label="下一张">›</button>
 				<button type="button" class="mizuki-image-preview__close" data-image-preview-close="true" aria-label="关闭图片预览">×</button>
-				<img class="mizuki-image-preview__image" alt="" />
-				<figcaption class="mizuki-image-preview__caption"></figcaption>
+				<div class="mizuki-image-preview__scroll">
+					<img class="mizuki-image-preview__image" alt="" />
+					<figcaption class="mizuki-image-preview__caption"></figcaption>
+				</div>
 			</figure>
 		`;
 
@@ -1032,6 +1035,9 @@ function disableAnimation() {
 		document.body.appendChild(modal);
 
 		imagePreviewModal = modal;
+		imagePreviewScroll = modal.querySelector(
+			".mizuki-image-preview__scroll",
+		) as HTMLDivElement;
 		imagePreviewImage = modal.querySelector(
 			".mizuki-image-preview__image",
 		) as HTMLImageElement;
@@ -1085,6 +1091,12 @@ function disableAnimation() {
 			"is-empty",
 			displayCaption.length === 0,
 		);
+
+		if (imagePreviewScroll) {
+			imagePreviewScroll.scrollTop = 0;
+		} else if (imagePreviewModal) {
+			imagePreviewModal.scrollTop = 0;
+		}
 
 		syncImagePreviewNavigation();
 	}

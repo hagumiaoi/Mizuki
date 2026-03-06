@@ -14,8 +14,27 @@ export type NovelWork = {
 export type NovelCategory = {
 	categorySlug: string;
 	categoryTitle: string;
+	cover: string;
 	works: NovelWork[];
 };
+
+const NOVEL_CATEGORY_COVER_MAP: Record<string, string> = {
+	环世界: "/images/novels/category/rimworld-cover.png",
+	兰德大陆: "/images/novels/category/land-cover.png",
+	天璀学院: "/images/novels/category/school-cover.png",
+};
+
+function resolveNovelCategoryCover(categorySlug: string, works: NovelWork[]) {
+	const mappedCover = NOVEL_CATEGORY_COVER_MAP[categorySlug];
+	if (mappedCover) {
+		return mappedCover;
+	}
+
+	return (
+		works.find((work) => Boolean(work.coverEntry.data.cover))?.coverEntry
+			.data.cover || ""
+	);
+}
 
 function normalizeEntryId(id: string) {
 	return id.replace(/^\/+|\/+$/g, "");
@@ -177,6 +196,7 @@ export function buildNovelCategories(entries: NovelEntry[]): NovelCategory[] {
 		categoriesMap.set(work.categorySlug, {
 			categorySlug: work.categorySlug,
 			categoryTitle: work.categorySlug,
+			cover: "",
 			works: [work],
 		});
 	}
@@ -185,6 +205,10 @@ export function buildNovelCategories(entries: NovelEntry[]): NovelCategory[] {
 	for (const category of categories) {
 		category.works.sort((a, b) =>
 			sortByPublishedDesc(a.coverEntry, b.coverEntry),
+		);
+		category.cover = resolveNovelCategoryCover(
+			category.categorySlug,
+			category.works,
 		);
 	}
 

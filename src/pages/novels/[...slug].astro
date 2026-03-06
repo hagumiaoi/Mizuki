@@ -153,9 +153,20 @@ const pageTitle =
 ---
 
 {pageType === "category" && (
-	<MainGridLayout title={pageTitle}>
+	<MainGridLayout
+		title={pageTitle}
+		contentBackdrop={category.cover || ""}
+	>
 		<div class="prose dark:prose-invert max-w-none sakura-select sakura-select--novel">
 			<div class="sakura-select-hero not-prose mb-7">
+				<div class="mb-4">
+					<a
+						href="/novels/"
+						class="inline-flex items-center text-sm font-medium text-[var(--content-meta)] transition-colors hover:text-[var(--primary)]"
+					>
+						← 返回 小说
+					</a>
+				</div>
 				<h1 class="sakura-select-title">{category.categoryTitle}</h1>
 				<p class="sakura-select-subtitle">请选择想阅读的作品。</p>
 			</div>

@@ -6,28 +6,9 @@ import MainGridLayout from "@layouts/MainGridLayout.astro";
 type EssayDisplayData = CollectionEntry<"essays">["data"] & {
 	cover?: string;
 	status?: string;
-	chapterNumber?: number;
 	tags?: string[];
 	author?: string;
 };
-
-function normalizeEntryId(id: string) {
-	return id.replace(/^\/+|\/+$/g, "");
-}
-
-function getIdParts(id: string) {
-	return normalizeEntryId(id).split("/").filter(Boolean);
-}
-
-function isEssayCoverEntry(entry: CollectionEntry<"essays">) {
-	const parts = getIdParts(entry.id);
-	return parts.length === 1 || (parts.length === 2 && parts[0] === parts[1]);
-}
-
-function isEssayChapterEntry(entry: CollectionEntry<"essays">) {
-	const parts = getIdParts(entry.id);
-	return parts.length >= 2 && !isEssayCoverEntry(entry);
-}
 
 export async function getStaticPaths() {
 	const allEssayEntries = await getCollection("essays");
@@ -53,27 +34,16 @@ interface Props {
 
 const { entry } = Astro.props as Props;
 const { Content } = await render(entry);
-const essayDir = getIdParts(entry.id)[0];
-
-const allEssayEntries = await getCollection("essays");
-
-const chapterFiles = allEssayEntries.filter((entryItem) => {
-	const parts = getIdParts(entryItem.id);
-	return parts[0] === essayDir && isEssayChapterEntry(entryItem);
-});
-
-chapterFiles.sort((a, b) => {
-	const numA = (a.data as EssayDisplayData).chapterNumber || 999;
-	const numB = (b.data as EssayDisplayData).chapterNumber || 999;
-	return numA - numB;
-});
 
 const entryData = entry.data as EssayDisplayData;
 const essayTitle = entryData.title;
 
 ---
 
-<MainGridLayout title={essayTitle}>
+<MainGridLayout
+	title={essayTitle}
+	contentBackdrop={entryData.cover || ""}
+>
 	<div class="prose dark:prose-invert max-w-none reading-content essay-reading-theme sakura-select sakura-select--essay">
 		<div class="mb-8 essay-meta-panel">
 			<h1 class="essay-aurora-title">{essayTitle}</h1>
@@ -113,48 +83,6 @@ const essayTitle = entryData.title;
 
 		<div class="my-8 custom-md">
 			<Content />
-		</div>
-
-		<hr class="my-8" />
-
-		<h2>章节列表</h2>
-
-		<div class="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2">
-			{
-				chapterFiles.length > 0 ? (
-					chapterFiles.map((chapter, index) => {
-						const chapterData = chapter.data as EssayDisplayData;
-						const chapterParts = getIdParts(chapter.id);
-						const chapterFileName = chapterParts[chapterParts.length - 1]
-							.replace(/\.md$/, "")
-							.replace(/^\d+-/, "");
-
-						return (
-							<a
-								href={`/essays/${essayDir}/${chapterFileName}/`}
-								class="sakura-select-card group flex items-start gap-3 rounded-[var(--radius-large)] border bg-[var(--card-bg)] px-4 py-3 transition-colors duration-150"
-							>
-								<span class="sakura-select-badge inline-flex h-7 min-w-7 items-center justify-center rounded-full px-2 text-xs font-semibold">
-									{chapterData.chapterNumber || index + 1}
-								</span>
-								<div class="min-w-0 flex-1">
-									<h3 class="sakura-select-card-title !m-0 text-base font-semibold transition-colors">
-										{chapter.data.title}
-									</h3>
-									{chapter.data.published && (
-										<p class="sakura-select-meta !mb-0 !mt-1 text-xs">
-											{new Date(chapter.data.published).toLocaleDateString("zh-CN")}
-										</p>
-									)}
-								</div>
-								<span class="sakura-select-card-arrow text-sm transition-colors">→</span>
-							</a>
-						);
-					})
-				) : (
-					<p class="text-[var(--content-meta)]">暂无章节</p>
-				)
-			}
 		</div>
 	</div>
 </MainGridLayout>

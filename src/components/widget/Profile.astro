@@ -26,21 +26,28 @@ function getProfileDisplayByPath(currentPathname: string) {
     if (currentPathname.startsWith("/novels")) {
         return {
             name: "小说",
-            bio: "我的小说收藏",
+            bio: "小说nya",
         };
     }
 
     if (currentPathname.startsWith("/essays")) {
         return {
             name: "随笔",
-            bio: "我的随笔记录",
+            bio: "随笔nya",
         };
     }
 
     if (currentPathname.startsWith("/thoughts")) {
         return {
             name: "应统",
-            bio: "我的应统笔记",
+            bio: "应统nya",
+        };
+    }
+
+    if (currentPathname.startsWith("/about")) {
+        return {
+            name: "关于moi",
+            bio: "这里是网站介绍还有自我介绍nya",
         };
     }
 
@@ -127,21 +134,28 @@ const displayBio = pageDisplay.bio;
             if (currentPathname.startsWith("/novels")) {
                 return {
                     name: "小说",
-                    bio: "我的小说收藏",
+                    bio: "小说nya",
                 };
             }
 
             if (currentPathname.startsWith("/essays")) {
                 return {
                     name: "随笔",
-                    bio: "我的随笔记录",
+                    bio: "随笔nya",
                 };
             }
 
             if (currentPathname.startsWith("/thoughts")) {
                 return {
                     name: "应统",
-                    bio: "我的应统笔记",
+                    bio: "应统nya",
+                };
+            }
+
+            if (currentPathname.startsWith("/about")) {
+                return {
+                    name: "关于moi",
+                    bio: "这里是网站介绍还有自我介绍nya",
                 };
             }
 
