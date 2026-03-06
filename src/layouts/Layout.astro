@@ -1252,12 +1252,35 @@ function disableAnimation() {
 		return clampArticleFontScale(savedScale);
 	}
 
+	function getArticleFontContentBlocks() {
+		const mainContentBlocks = Array.from(
+			document.querySelectorAll("#content-wrapper .custom-md"),
+		) as HTMLElement[];
+
+		if (mainContentBlocks.length > 0) {
+			return mainContentBlocks;
+		}
+
+		return Array.from(
+			document.querySelectorAll(".custom-md"),
+		) as HTMLElement[];
+	}
+
 	function applyArticleFontScale(scale: number) {
 		const normalizedScale = clampArticleFontScale(scale);
 		document.documentElement.style.setProperty(
 			ARTICLE_FONT_SCALE_CSS_VAR,
 			normalizedScale.toFixed(2),
 		);
+
+		const contentBlocks = getArticleFontContentBlocks();
+		contentBlocks.forEach((block) => {
+			block.style.setProperty(
+				"font-size",
+				`calc(1rem * ${normalizedScale.toFixed(2)})`,
+			);
+		});
+
 		return normalizedScale;
 	}
 
@@ -1306,9 +1329,7 @@ function disableAnimation() {
 	}
 
 	function initArticleFontController() {
-		const contentBlocks = Array.from(
-			document.querySelectorAll(".custom-md"),
-		) as HTMLElement[];
+		const contentBlocks = getArticleFontContentBlocks();
 
 		if (!contentBlocks.length) {
 			removeArticleFontController();
@@ -1452,6 +1473,12 @@ function disableAnimation() {
 					}
 				}
 			}
+		});
+
+		window.swup.hooks.on("page:view", () => {
+			requestAnimationFrame(() => {
+				initArticleFontController();
+			});
 		});
 
 		window.swup.hooks.on(

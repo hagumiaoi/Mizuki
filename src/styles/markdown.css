@@ -244,6 +244,45 @@
   margin-bottom: 0.35rem;
 }
 
+.custom-md .about-self-intro {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(220px, 320px);
+  align-items: start;
+  gap: 1.1rem;
+  margin: 1.2rem 0 0.6rem;
+  padding: 1rem;
+  border: 1px solid color-mix(in oklch, var(--primary) 20%, var(--line-color) 80%);
+  border-radius: var(--radius-large);
+  background: color-mix(in oklch, var(--card-bg) 92%, var(--page-bg) 8%);
+}
+
+.custom-md .about-self-intro__text > :first-child {
+  margin-top: 0;
+}
+
+.custom-md .about-self-intro__text > :last-child {
+  margin-bottom: 0;
+}
+
+.custom-md .about-self-intro__media {
+  margin: 0;
+  padding: 0.28rem;
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  border-radius: calc(var(--radius-large) - 0.1rem);
+  border: 1px solid color-mix(in oklch, var(--line-color) 72%, var(--primary) 28%);
+  background: color-mix(in oklch, var(--card-bg) 88%, var(--page-bg) 12%);
+}
+
+.custom-md .about-self-intro__media img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: calc(var(--radius-large) - 0.35rem);
+  object-fit: cover;
+  object-position: center;
+}
+
 .custom-md .mizuki-font-size-controller {
   position: sticky;
   top: 0.5rem;
@@ -901,5 +940,16 @@
   .custom-md .mizuki-font-size-reset {
     font-size: 0.66rem;
     padding: 0.16rem 0.4rem;
+  }
+
+  .custom-md .about-self-intro {
+    grid-template-columns: 1fr;
+    gap: 0.9rem;
+    padding: 0.85rem;
+  }
+
+  .custom-md .about-self-intro__media {
+    max-width: min(72vw, 18rem);
+    margin-inline: auto;
   }
 }

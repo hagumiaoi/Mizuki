@@ -7,5 +7,5 @@ tags:
   - "随笔"
   - "马哲"
 author: "moi"
-cover: /images/novel-cover.png
+cover: /images/mazhe.png
 ---
