@@ -57,7 +57,7 @@ export const siteConfig: SiteConfig = {
 		// 顶栏标题图标路径，默认使用 public/assets/home/home.png
 		icon: "assets/home/home.png",
 		// 网站Logo图片路径
-		logo: "assets/home/home.png",
+		logo: "images/profile/about-intro.webp",
 	},
 
 	// 页面自动缩放配置

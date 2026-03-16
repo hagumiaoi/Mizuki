@@ -2,7 +2,7 @@
 title: 蔷薇学会
 description: 天璀学院的开端记录
 author: moi
-status: 连载中
+status: 还没写
 tags: [校园, 奇幻]
 cover: /images/mazhe.png
 published: 2026-03-07
