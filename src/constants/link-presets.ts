@@ -39,9 +39,9 @@ export const LinkPresets: { [key in LinkPreset]: NavBarLink } = {
 		icon: "material-symbols:edit",
 	},
 	[LinkPreset.Thoughts]: {
-		name: "应统",
+		name: "项目",
 		url: "/thoughts/",
-		icon: "material-symbols:lightbulb",
+		icon: "material-symbols:work",
 	},
 	[LinkPreset.Albums]: {
 		name: i18n(I18nKey.albums),
