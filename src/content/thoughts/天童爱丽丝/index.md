@@ -12,4 +12,6 @@ status: "已发布"
 ---
 
 通过网盘分享的文件：天童爱丽丝.zip
-链接: https://pan.baidu.com/s/1-WviiNoIlXa77k97d3v-og?pwd=AL1S 提取码: AL1S
+链接: https://pan.baidu.com/s/1HsEnPDPGFp06MrOBsOHo2g?pwd=AL1S 提取码: AL1S
+
+github分享链接：https://github.com/hagumiaoi/Alice-Assistant.git
