@@ -635,6 +635,8 @@ const normalizedContentBackdrop =
                                     src={Array.isArray(bannerImages.mobile) ? bannerImages.mobile[index] : (typeof bannerImages.mobile === 'string' ? bannerImages.mobile : '')} 
                                     position={siteConfig.banner.position}
                                     loading={index === 0 ? "eager" : "lazy"}
+                                    fetchpriority={index === 0 ? "high" : "auto"}
+                                    decoding="async"
                                 />
                             )}
                             <!-- Desktop/Tablet: use desktop-specific images -->
@@ -645,6 +647,8 @@ const normalizedContentBackdrop =
                                     src={Array.isArray(bannerImages.desktop) ? bannerImages.desktop[index] : (typeof bannerImages.desktop === 'string' ? bannerImages.desktop : '')} 
                                     position={siteConfig.banner.position}
                                     loading={index === 0 ? "eager" : "lazy"}
+                                    fetchpriority={index === 0 ? "high" : "auto"}
+                                    decoding="async"
                                 />
                             )}
                         </li>
@@ -686,6 +690,8 @@ const normalizedContentBackdrop =
                         mobileImg.className = 'block md:hidden object-cover h-full w-full transition duration-700 opacity-100';
                         mobileImg.src = mobileSrc;
                         mobileImg.loading = 'eager';
+                        mobileImg.fetchpriority = 'high';
+                        mobileImg.decoding = 'async';
                         mobileImg.dataset.position = position;
                         container.appendChild(mobileImg);
                     }
@@ -697,6 +703,8 @@ const normalizedContentBackdrop =
                         desktopImg.className = 'hidden md:block object-cover h-full w-full transition duration-700 opacity-100';
                         desktopImg.src = desktopSrc;
                         desktopImg.loading = 'eager';
+                        desktopImg.fetchpriority = 'high';
+                        desktopImg.decoding = 'async';
                         desktopImg.dataset.position = position;
                         container.appendChild(desktopImg);
                     }

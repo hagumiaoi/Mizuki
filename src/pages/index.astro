@@ -43,6 +43,8 @@ const galleryImages = fs.existsSync(galleryDir)
 								src={src}
 								alt={`首页图片 ${index + 1}`}
 								loading="lazy"
+								decoding="async"
+								fetchpriority="low"
 								class="h-56 w-full object-cover transition-transform duration-200 group-hover:scale-[1.02]"
 							/>
 						</a>
